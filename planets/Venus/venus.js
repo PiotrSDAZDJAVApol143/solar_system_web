@@ -19,7 +19,7 @@ const sunOrbitDuration = 6741;
 const venusCloudRotationDuration = 120;
 const sunRadius = 1093;
 const sunDistance = 108000;
-const spaceHorizonDistance = 250000;
+const spaceHorizonDistance = 500000;
 const ambientLightPower = 4;
 
 const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius);
@@ -61,7 +61,7 @@ createSpaceHorizon(scene, spaceHorizonDistance);
 const { sunMesh, sunLight, sunPivot, ambientLight} = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
 
 // Gwiazdy
-const stars = getStarfield({ numStars: 200 });
+const stars = getStarfield({ numStars: 500 });
 scene.add(stars);
 
 // Animacja

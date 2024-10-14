@@ -17,7 +17,7 @@ const mercuryDay = 1765;
 const sunOrbitDuration = 2638;
 const sunRadius = 1093;
 const sunDistance = 57900;
-const spaceHorizonDistance = 250000;
+const spaceHorizonDistance = 500000;
 const ambientLightPower = 5;
 
 const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius);
@@ -38,7 +38,7 @@ createSpaceHorizon(scene, spaceHorizonDistance);
 const { sunMesh, sunLight, sunPivot, ambientLight} = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
 
 // Gwiazdy
-const stars = getStarfield({ numStars: 200 });
+const stars = getStarfield({ numStars: 500 });
 scene.add(stars);
 
 // Animacja

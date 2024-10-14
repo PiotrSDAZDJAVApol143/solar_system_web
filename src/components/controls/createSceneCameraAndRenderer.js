@@ -4,7 +4,7 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.169.0/exampl
 
 export function createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius ) {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 250000);
+    const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 500000);
     camera.position.z = cameraPosition;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });

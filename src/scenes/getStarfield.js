@@ -3,7 +3,7 @@ import * as THREE from "three";
 export default function getStarfield({ numStars = 800 } = {}) {
   // Funkcja generująca gwiazdy na sferze
   function randomSpherePoint() {
-    const radius = Math.random() * 10000 + 100000;  // Umieszczamy gwiazdy dalej
+    const radius = Math.random() * 100000 + 400000;  // Umieszczamy gwiazdy dalej
     const u = Math.random();
     const v = Math.random();
     const theta = 2 * Math.PI * u;
@@ -39,7 +39,7 @@ export default function getStarfield({ numStars = 800 } = {}) {
   geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
   const mat = new THREE.PointsMaterial({
-    size: 890,
+    size: 1200,
     vertexColors: true,
     map: new THREE.TextureLoader().load("../../assets/textures/stars/circle.png"),
   });
