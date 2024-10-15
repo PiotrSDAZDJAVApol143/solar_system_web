@@ -1,40 +1,41 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js';
 import { getFresnelMat } from "../../src/utils/getFresnelMat.js";
-import { Lensflare, LensflareElement } from 'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/objects/Lensflare.js';
+import { createSceneCameraAndRenderer } from '../../src/components/controls/createSceneCameraAndRenderer.js';
+import { createPlanet } from '../../src/models/createPlanet.js';
 import getStarfield from "../../src/scenes/getStarfield.js";
+import { addSunAndLight } from '../../src/animations/getLightSun.js';
+import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
+
+
 const container = document.getElementById("three-container");
 
 const w = window.innerWidth;
 const h = window.innerHeight;
+const planetRadius = 10;
+const axialTilt = -23.4 ;
+const cameraPosition = planetRadius*2;
+const flarePower = 350;
+const earthDay = 30;  // Pełny obrót Ziemi w 30 sekund
+const moonOrbitDuration = 819.6;  // Pełna orbita Księżyca w 819,6 sekund (27,32 dni)
+const sunOrbitDuration = 10957.5;  // Pełna orbita Słońca w 10957,5 sekund (365,25 dni)
+const sunRadius = 1093;
+const sunDistance = 234800;
+const spaceHorizonDistance = 500000;
+const ambientLightPower = 3.5;
+const rotationAngle = 60;
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 250000);
-camera.position.z = 50;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(w, h);
-container.appendChild(renderer.domElement);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Opcjonalnie dla miękkich cieni
-
-
+const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
 
 // Grupa reprezentująca Ziemię
 const earthPlanet = new THREE.Group();
-earthPlanet.rotation.z = -23.4 * Math.PI / 180;  // Nachylenie osi Ziemi
+earthPlanet.rotation.z = axialTilt * Math.PI / 180;  // Nachylenie osi Ziemi
 scene.add(earthPlanet);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.minDistance = 11;
-controls.maxDistance = 350;
 
 // Ziemia
 const detail = 16;
 const loader = new THREE.TextureLoader();
-const geometry = new THREE.IcosahedronGeometry(10, detail);
+const geometry = new THREE.IcosahedronGeometry(planetRadius, detail);
 const material = new THREE.MeshPhongMaterial({
     map: loader.load("../../assets/textures/earth/8k_earth_daymap.jpg"),
     shininess: 10  // Dodajemy blask dla realizmu
@@ -45,8 +46,8 @@ earthMesh.receiveShadow = true;
 earthPlanet.add(earthMesh);
 
 // Księżyc
-const moonRadius = 2.72;
-const moonDistance = 300;
+const moonRadius = 2.73;
+const moonDistance = 603;
 const moonPivot = new THREE.Object3D();  // Przegub dla orbity Księżyca
 earthPlanet.add(moonPivot);  // Dodaj przegub do Ziemi
 
@@ -72,7 +73,7 @@ const lightsAtNight = new THREE.MeshBasicMaterial({
     map: loader.load("../../assets/textures/earth/8k_earth_nightmap.jpg"),
     blending: THREE.AdditiveBlending,
 });
-const earthAtNight = new THREE.Mesh(geometry, lightsAtNight);
+const earthAtNight = new THREE.Mesh(earthMesh.geometry, lightsAtNight);
 earthPlanet.add(earthAtNight);
 
 const cloudsMat = new THREE.MeshStandardMaterial({
@@ -82,67 +83,25 @@ const cloudsMat = new THREE.MeshStandardMaterial({
     blending: THREE.AdditiveBlending,
     //alphaMap: loader.load('./textures/8k_earth_clouds.jpg'),
 });
-const cloudsMesh = new THREE.Mesh(geometry, cloudsMat);
+const cloudsMesh = new THREE.Mesh(earthMesh.geometry, cloudsMat);
 cloudsMesh.scale.setScalar(1.003);
 earthPlanet.add(cloudsMesh);
 
 const fresnelMat = getFresnelMat();
-const glowMesh = new THREE.Mesh(geometry, fresnelMat);
+const glowMesh = new THREE.Mesh(earthMesh.geometry, fresnelMat);
 glowMesh.scale.setScalar(1.0157);
 earthPlanet.add(glowMesh);
 
 
+//horyzont kosmosu
+createSpaceHorizon(scene, spaceHorizonDistance);
 
-// Światło otoczenia dla
-const ambientLight = new THREE.AmbientLight(0x404040, 3.5);  
-scene.add(ambientLight);
-
-const spaceTexture = loader.load('./textures/8k_stars_milky_way.jpg'); // Załaduj 8k teksturę kosmosu
-//const spaceTexture = loader.load('./textures/space2.jpeg'); // Załaduj 6k teksturę kosmosu
-const spaceGeometry = new THREE.SphereGeometry(250000, 50, 50);
-const spaceMaterial = new THREE.MeshBasicMaterial({
-    map: spaceTexture,
-    side: THREE.BackSide  // Odwrócenie normalnych, żeby tekstura była widoczna od wewnątrz
-});
-
-const spaceSphere = new THREE.Mesh(spaceGeometry, spaceMaterial);
-scene.add(spaceSphere);
-
-// Dodajemy światło od Słońca
-const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
-sunLight.position.set(150000, 0, 0);  // Ustawienie Słońca z odległością
-sunLight.castShadow = true;  // Cieniowanie
-scene.add(sunLight);
-
-// Słońce
-const sunRadius = 1090;
-const sunGeo = new THREE.SphereGeometry(sunRadius, 32, 32);
-const sunMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-const sunMesh = new THREE.Mesh(sunGeo, sunMat);
-sunMesh.position.set(150000, 0, 0);  // Znowu ustawiamy pozycję Słońca
-scene.add(sunMesh);
-
-// Dodajemy efekt rozbłysku
-const flareTexture = loader.load('./textures/stars/lensflare0.png');
-const lensflare = new Lensflare();
-lensflare.addElement(new LensflareElement(flareTexture, 300, 0));
-sunMesh.add(lensflare);
-// Orbita Słońca
-const sunPivot = new THREE.Object3D();
-scene.add(sunPivot);
-sunPivot.add(sunMesh);
-sunPivot.add(sunLight);
+//Słońce
+const { sunMesh, sunLight, sunPivot, ambientLight} = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
 
 // Gwiazdy
-const stars = getStarfield({ numStars: 200 });
+const stars = getStarfield({ numStars: 500 });
 scene.add(stars);
-
-// Czasy rotacji i orbity (w sekundach, przeskalowane do animacji)
-const earthDay = 30;  // Pełny obrót Ziemi w 30 sekund
-const moonOrbitDuration = 819.6;  // Pełna orbita Księżyca w 819,6 sekund (27,32 dni)
-const sunOrbitDuration = 10957.5;  // Pełna orbita Słońca w 10957,5 sekund (365,25 dni)
-
-
 
 // Animacja
 function animate() {
@@ -163,7 +122,7 @@ function animate() {
 
     // Okrągła orbita Słońca (przeciwnie do wskazówek zegara)
     const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2; // Obliczamy czas dla pełnej orbity w 10957,5 sekund
-    const sunDistance = 150000;  // Stała odległość Słońca
+    const sunDistance = 234800;  // Stała odległość Słońca
 
     sunMesh.position.x = Math.cos(-time) * sunDistance;  // Ujemny czas dla odwrotnej orbity
     sunMesh.position.z = Math.sin(-time) * sunDistance;

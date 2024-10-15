@@ -16,11 +16,12 @@ const flarePower = 900;
 const mercuryDay = 1765;
 const sunOrbitDuration = 2638;
 const sunRadius = 1093;
-const sunDistance = 57900;
+const sunDistance = 90890;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 5;
+const rotationAngle = -180;
 
-const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius);
+const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
 
 const mercuryPlanet = new THREE.Group();
 mercuryPlanet.rotation.z = axialTilt * Math.PI / 180;  // Nachylenie osi 

@@ -19,16 +19,17 @@ const flarePower = 300;
 const marsDay = 30.75;
 const sunOrbitDuration = 20610;
 const sunRadius = 1093;
-const sunDistance = 227850;
+const sunDistance = 357790;
 const fobosOrbitDuration = 9.5;
 const fobosRotationDuration = 9.5;
 const deimosOrbitDuration = 37.9;
 const deimosRotationDuration = 37.9;
-const spaceHorizonDistance = 250000;
+const spaceHorizonDistance = 500000;
 const ambientLightPower = 3;
+const rotationAngle = 260;
 
 
-const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius);
+const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
 
 
 const marsPlanet = new THREE.Group();
@@ -62,7 +63,7 @@ createSpaceHorizon(scene, spaceHorizonDistance);
 const { sunMesh, sunLight, sunPivot, ambientLight} = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
 
 // Gwiazdy
-const stars = getStarfield({ numStars: 200 });
+const stars = getStarfield({ numStars: 500 });
 scene.add(stars);
 
 

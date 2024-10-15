@@ -18,11 +18,12 @@ const venusDay = 7290;
 const sunOrbitDuration = 6741;
 const venusCloudRotationDuration = 120;
 const sunRadius = 1093;
-const sunDistance = 108000;
+const sunDistance = 169810;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 4;
+const rotationAngle =110;
 
-const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius);
+const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
 
 const venusPlanet = new THREE.Group();
 venusPlanet.rotation.z = axialTilt * Math.PI / 180;  // Nachylenie osi 
