@@ -1,3 +1,5 @@
+// mars.js
+
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169/build/three.module.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.169/examples/jsm/loaders/GLTFLoader.js';
 import { createSceneCameraAndRenderer } from '../../src/components/controls/createSceneCameraAndRenderer.js';
@@ -5,129 +7,184 @@ import { createPlanet } from '../../src/models/createPlanet.js';
 import { addSunAndLight } from '../../src/animations/getLightSun.js';
 import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
 import getStarfield from '../../src/scenes/getStarfield.js';
+import { cleanMaterial } from '../../src/utils/cleanMaterial.js';
+import { handleWindowResize } from '../../src/scenes/handleWindowResize.js';
 
-//Tablica zmiennych
-const container = document.getElementById('mars-container');
-const w = container.clientWidth;   // Prawidłowe pobieranie szerokości kontenera
-const h = container.clientHeight;  // Prawidłowe pobieranie wysokości kontenera
+// Zmienne globalne dla modułu
+let scene, camera, renderer, controls, animateId;
+let marsPlanet, phobosPivot, deimosPivot;
+let phobosMesh, deimosMesh;
+let sunMesh, sunLight, sunPivot, ambientLight;
+let container;
+let onWindowResize;
 
+// Parametry planety i innych obiektów
 const planetRadius = 5.32;
 const axialTilt = -25.19;
-const cameraPosition = planetRadius*2;
+const cameraPosition = planetRadius * 2;
 const flarePower = 300;
 const marsDay = 30.75;
 const sunOrbitDuration = 20610;
 const sunRadius = 1093;
 const sunDistance = 357790;
-const fobosOrbitDuration = 9.5;
-const fobosRotationDuration = 9.5;
+const phobosOrbitDuration = 9.5;
+const phobosRotationDuration = 9.5;
 const deimosOrbitDuration = 37.9;
 const deimosRotationDuration = 37.9;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 3;
 const rotationAngle = 260;
 
+export function initializeMarsScene(containerElement) {
+    container = containerElement;
 
-const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
+    // Sprawdź, czy scena już istnieje
+    if (scene) {
+        disposeMarsScene();
+    }
 
+    console.log("Wymiary mars-container:", container.clientWidth, container.clientHeight);
+    const w = container.clientWidth;
+    const h = container.clientHeight;
 
-const marsPlanet = new THREE.Group();
-marsPlanet.rotation.z = axialTilt * Math.PI / 180;  // Nachylenie osi 
-scene.add(marsPlanet);
-
-//generator planety
-const loader = new THREE.TextureLoader();
-const marsMesh = createPlanet(planetRadius, "../../assets/textures/mars/8k_mars.jpg", 5);
-marsPlanet.add(marsMesh);
-
-
-//const fresnelMat = getFresnelMat({
-//    rimHex: 0xff4500,   // Czerwonawo-pomarańczowa poświata Marsa
-//    facingHex: 0x000000,  // Czarny kolor od frontu
-//    fresnelBias: 0.02,   // Subtelna poświata atmosfery
-//    fresnelScale: 0.5,   // Umiarkowany efekt Fresnela
-//    fresnelPower: 2.0    // Rozciągnięcie efektu poświaty na większą powierzchnię
-//});
-//fresnelMat.transparent = true;
-//fresnelMat.opacity = 0.05;
-//const glowMesh = new THREE.Mesh(geometry, fresnelMat);
-//glowMesh.scale.setScalar(1.005);
-//marsPlanet.add(glowMesh);
+    // Tworzenie sceny, kamery i renderera
+    const result = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
+    scene = result.scene;
+    camera = result.camera;
+    renderer = result.renderer;
+    controls = result.controls;
 
 
-//horyzont kosmosu
-createSpaceHorizon(scene, spaceHorizonDistance);
+    // Włącz obsługę cieni w rendererze
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-//Słońce
-const { sunMesh, sunLight, sunPivot, ambientLight} = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
+    console.log("Renderer domElement: ", renderer.domElement);
+    renderer.render(scene, camera);
+    console.log("Rendering completed.");
 
-// Gwiazdy
-const stars = getStarfield({ numStars: 500 });
-scene.add(stars);
+    marsPlanet = new THREE.Group();
+    marsPlanet.rotation.z = axialTilt * Math.PI / 180;  // Nachylenie osi 
+    scene.add(marsPlanet);
+
+    // Tworzenie planety Mars
+    const marsMesh = createPlanet(planetRadius, "../../assets/textures/mars/8k_mars.jpg", 5);
+    marsMesh.receiveShadow = true;
+    marsPlanet.add(marsMesh);
+
+    // Horyzont kosmosu
+    createSpaceHorizon(scene, spaceHorizonDistance);
+
+    // Słońce i światło
+    const sunResult = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
+    sunMesh = sunResult.sunMesh;
+    sunLight = sunResult.sunLight;
+    sunPivot = sunResult.sunPivot;
+    ambientLight = sunResult.ambientLight;
+
+    // Gwiazdy
+    const stars = getStarfield({ numStars: 500 });
+    scene.add(stars);
+
+    // Ładowanie Fobosa i Deimosa
+    phobosPivot = new THREE.Object3D();
+    deimosPivot = new THREE.Object3D();
+    marsPlanet.add(phobosPivot);
+    marsPlanet.add(deimosPivot);
+
+    const loader3d = new GLTFLoader();
+    loader3d.load('../../assets/textures/3D_models/24878_Phobos_1_1000.glb', function (gltf) {
+        phobosMesh = gltf.scene;
+        const phobosScale = 0.0176;  // Skala Fobosa
+        phobosMesh.scale.set(phobosScale, phobosScale, phobosScale);
+        phobosMesh.position.set(14.7, 0, 0);  // Odległość od Marsa
+        phobosMesh.rotation.z = THREE.MathUtils.degToRad(1.07);
+        phobosMesh.shininess = 10;
+        phobosMesh.castShadow = true;
+        phobosPivot.add(phobosMesh);
+    });
 
 
-let phobosMesh, deimosMesh;
-const phobosPivot = new THREE.Object3D();
-const deimosPivot = new THREE.Object3D();
-marsPlanet.add(phobosPivot);
-marsPlanet.add(deimosPivot);
-
-const loader3d = new GLTFLoader();
-loader3d.load('../../assets/textures/3D_models/24878_Phobos_1_1000.glb', function (gltf) {
-    phobosMesh = gltf.scene;
-    // Ustawienie odpowiedniej skali dla Fobosa
-    const fobosScale = 0.0176;  // Promień Fobosa względem Marsa
-    phobosMesh.scale.set(fobosScale, fobosScale, fobosScale);
-    phobosMesh.position.set(14.7, 0, 0);  // Ustawienie odległości od Marsa
-    phobosMesh.rotation.z = THREE.MathUtils.degToRad(1.07);
-    phobosMesh.shininess = 10;
-    phobosPivot.add(phobosMesh);
-});
-//loader3d.load('http://127.0.0.1:5500/assets/textures/3D_models/24879_Deimos_1_1000.glb', function (gltf) {
-loader3d.load('../../../assets/textures/3D_models/24879_Deimos_1_1000.glb', function (gltf) {
-    deimosMesh = gltf.scene;
-    console.log("Deimos załadowany:", deimosMesh);
-    // Ustawienie odpowiedniej skali dla Deimos
-    const deimosScale = 0.0097;  // Promień Fobosa względem Marsa
-    deimosMesh.scale.set(deimosScale, deimosScale, deimosScale);
-    deimosMesh.shininess = 10;
-    deimosMesh.position.set(36.8, 0, 0);  // Ustawienie odległości od Marsa
-    deimosMesh.rotation.z = THREE.MathUtils.degToRad(1.78);
-    deimosPivot.add(deimosMesh);
-});
-
-
-// Animacja
+    loader3d.load('../../assets/textures/3D_models/24879_Deimos_1_1000.glb', function (gltf) {
+        deimosMesh = gltf.scene;
+        console.log("Deimos załadowany:", deimosMesh);
+        const deimosScale = 0.0097;  // Skala Deimosa
+        deimosMesh.scale.set(deimosScale, deimosScale, deimosScale);
+        deimosMesh.shininess = 10;
+        deimosMesh.position.set(36.8, 0, 0);  // Odległość od Marsa
+        deimosMesh.rotation.z = THREE.MathUtils.degToRad(1.78);
+        deimosMesh.castShadow = true;
+        deimosPivot.add(deimosMesh);
+    });
+    onWindowResize = function() {
+        handleWindowResize(camera, renderer, container);
+    };
+    // Rozpoczęcie animacji
+    window.addEventListener('resize', onWindowResize, false);
+    animate();
+}
+export function disposeMarsScene() {
+    if (renderer) {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        renderer.domElement = null;
+        renderer = null;
+    }
+    if (scene) {
+        scene.traverse(function (object) {
+            if (object.isMesh) {
+                object.geometry.dispose();
+                if (object.material.isMaterial) {
+                    cleanMaterial(object.material);
+                } else {
+                    // Dla materiałów jako tablice
+                    for (const material of object.material) {
+                        cleanMaterial(material);
+                    }
+                }
+            }
+        });
+        scene = null;
+    }
+    if (animateId) {
+        cancelAnimationFrame(animateId);
+        animateId = null;
+    }
+    if (container) {
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+        container = null;
+    }
+    if (onWindowResize) {
+        window.removeEventListener('resize', onWindowResize);
+        onWindowResize = null;
+    }
+}
 function animate() {
-    requestAnimationFrame(animate);
+    animateId = requestAnimationFrame(animate);
 
     // Rotacja Planety
-    marsMesh.rotation.y += (2 * Math.PI) / (marsDay * 60);
+    marsPlanet.rotation.y += (2 * Math.PI) / (marsDay * 60);
+
     if (deimosMesh) {
         deimosPivot.rotation.y += (2 * Math.PI) / (deimosOrbitDuration * 60);  // Orbita
-        deimosMesh.rotation.x += (2 * Math.PI) / (deimosRotationDuration * 60);  // Rotacja synchroniczna
-    }
-    // Orbita Fobosa wokół Marsa
-    if (phobosMesh) {
-        phobosPivot.rotation.y += (2 * Math.PI) / (fobosOrbitDuration * 60);  // Orbita
-        phobosMesh.rotation.x += (2 * Math.PI) / (fobosRotationDuration * 60);  // Rotacja synchroniczna
+        deimosMesh.rotation.x += (2 * Math.PI) / (deimosRotationDuration * 60);  // Rotacja
     }
 
-    // Okrągła orbita Słońca (przeciwnie do wskazówek zegara)
-    const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2; // Obliczamy czas dla pełnej orbity w 10957,5 sekund
-    sunMesh.position.x = Math.cos(-time) * sunDistance;  // Ujemny czas dla odwrotnej orbity
+    if (phobosMesh) {
+        phobosPivot.rotation.y += (2 * Math.PI) / (phobosOrbitDuration * 60);  // Orbita
+        phobosMesh.rotation.x += (2 * Math.PI) / (phobosRotationDuration * 60);  // Rotacja
+    }
+
+    // Orbita Słońca
+    const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2;
+    sunMesh.position.x = Math.cos(-time) * sunDistance;
     sunMesh.position.z = Math.sin(-time) * sunDistance;
+    sunLight.position.copy(sunMesh.position);
     sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z);
 
     renderer.render(scene, camera);
+    console.log("Animacja działa");
 }
-
-animate();
-
-// Obsługa zmiany rozmiaru okna
-function handleWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-window.addEventListener('resize', handleWindowResize, false);
+console.log("mars.js załadowany!");

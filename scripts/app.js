@@ -1,20 +1,69 @@
 
 import { loadNavbar } from '../src/components/layout/navbar.js';
 import { loadFooter } from '../src/components/layout/footer.js';
-
+import { initializeMarsScene, disposeMarsScene } from '../planets/Mars/mars.js';
 
 document.addEventListener("DOMContentLoaded", () => {
 
   loadNavbar();
   loadFooter();
 
-  document.getElementById("home-link").addEventLiDstener("click", loadHome);
-  document.getElementById("about-link").addEventLiDstener("click", loadAboutMe);
-  document.getElementById("solar-system-link").addEventLiDstener("click", loadSolarSystem);
+  document.getElementById("home-link").addEventListener("click", loadHome);
+  document.getElementById("about-link").addEventListener("click", loadAboutMe);
+  document.getElementById("solar-system-link").addEventListener("click", loadSolarSystem);
   document.getElementById("library-link").addEventListener("click", loadLibrary);
   document.getElementById("fun-facts-link").addEventListener("click", loadFunAndFacts);
   document.getElementById("contact-link").addEventListener("click", loadContact);
+  loadHome(); /*domyślnie strona główna */
 });
+
+function disposeCurrentScene() {
+  disposeMarsScene();
+  // disposeEarthScene();
+  // disposeMoonScene();
+}
+
+function loadHome() {
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <h1>Witamy na Stronie Głównej Astro-Friq</h1>
+    <p>Znajdziesz tu różne informacje o kosmosie...</p>
+  `;
+  
+  setActiveLink("home-link");
+}
+
+function loadAboutMe(){
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <h1> To sem ja :) </h1>
+  `;
+  setActiveLink("about-link");
+}
+
+function clearThree(obj) {
+  while (obj.children.length > 0) {
+    clearThree(obj.children[0]);
+    obj.remove(obj.children[0]);
+  }
+
+  if (obj.geometry) obj.geometry.dispose();
+  if (obj.material) {
+    if (obj.material instanceof Array) {
+      obj.material.forEach((mat) => mat.dispose());
+    } else {
+      obj.material.dispose();
+    }
+  }
+}
+
+function loadSolarSystem(){
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <h1> Tu będzie interaktywny model układu słoneczego w skali w 3D ;O </h1>
+  `;
+  setActiveLink("solar-system-link");
+}
 
 function loadLibrary() {
   const content = document.getElementById("content");
@@ -34,13 +83,34 @@ function loadLibrary() {
      
     </ul>
   `;
+  setActiveLink("library-link");
 
   document.getElementById("mars-link").addEventListener("click", loadMars);
   document.getElementById("earth-link").addEventListener("click", loadEarth);
   document.getElementById("moon-link").addEventListener("click", loadMoon);
 }
 
+function loadFunAndFacts(){
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <h1> Tu będą informacje naukowe i śmieszne ciekawostki </h1>
+  `;
+  setActiveLink("fun-facts-link");
+}
+
+function loadContact(){
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <h1> Tu się wklei jakiś kontakt </h1>
+  `;
+  setActiveLink("contact-link");
+}
+
+
 function loadMars() {
+  // Usuń poprzednią scenę, jeśli istnieje
+  disposeMarsScene();
+
   const content = document.getElementById("content");
   content.innerHTML = `
     <div class="container-fluid">
@@ -56,12 +126,17 @@ function loadMars() {
       </div>
     </div>
   `;
+  const container = document.getElementById('mars-container');
+  console.log("Wymiary mars-container:", container.clientWidth, container.clientHeight);
 
   // Załaduj skrypt Three.js z animacją Marsa
-  const script = document.createElement("script");
-  script.type = "module";
-  script.src = "./planets/Mars/mars.js";  // Ścieżka do pliku Mars.js
-  document.body.appendChild(script);
+ // const script = document.createElement("script");
+ // script.type = "module";
+ // script.src = "./planets/Mars/mars.js";  // Ścieżka do pliku Mars.js
+ // document.body.appendChild(script);
+
+ // Inicjalizuj scenę Marsa
+ initializeMarsScene(container);
 }
 
 
@@ -81,4 +156,12 @@ function loadMoon() {
   script.type = "module";
   script.src = "../planets/Earth/Moon/moon.js"; // Ścieżka do pliku Księżyca
   document.body.appendChild(script);
+}
+function setActiveLink(activeId) {
+  const links = document.querySelectorAll(".navbar a");
+  links.forEach(link => {
+    link.classList.remove("active");
+  });
+  const activeLink = document.getElementById(activeId);
+  activeLink.classList.add("active");
 }

@@ -3,11 +3,21 @@ import { Lensflare, LensflareElement } from 'https://cdn.jsdelivr.net/npm/three@
 
 export function addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower) {
     const loader = new THREE.TextureLoader();
-    
+
     // Światło
     const sunLight = new THREE.DirectionalLight(0xffffff, 3.5);
     sunLight.position.set(sunDistance, 0, 0);
     sunLight.castShadow = true;
+    // Ustawienia cienia dla sunLight
+    sunLight.shadow.mapSize.width = 2048;  // Rozdzielczość mapy cienia
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.1;     // Minimalna odległość dla cieni
+    sunLight.shadow.camera.far = 1000000;  // Maksymalna odległość dla cieni
+     // Ustawienia obszaru cienia (dla DirectionalLight)
+     sunLight.shadow.camera.left = -1000;
+     sunLight.shadow.camera.right = 1000;
+     sunLight.shadow.camera.top = 1000;
+     sunLight.shadow.camera.bottom = -1000;
     scene.add(sunLight);
 
     // Słońce
