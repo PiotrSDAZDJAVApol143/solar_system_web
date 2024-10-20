@@ -1,0 +1,113 @@
+/* Stylizacja paska nawigacji */
+body {
+    background-color: rgb(24, 25, 27);
+}
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Ukryj poziomy pasek przewijania */
+}
+
+#content {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;  /* Sprawi, że kontener będzie zajmować całą wysokość ekranu */
+}
+
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    /* padding: 10px 10px; */
+    padding: 0;
+    font-family: montserrat;
+    text-transform: uppercase;
+    background-color: silver;
+    box-shadow: 0 2px 5 px rgba(49, 47, 47, 0.3);
+
+}
+
+.navbar-links {
+    display: flex;
+    gap: 20px;
+}
+
+.navbar a {
+    color: black;
+    font-size: larger;
+    font-weight: bolder;
+    text-decoration: none;
+    padding: 10px 10px;
+    border-radius: 5px;
+}
+.navbar a.active, a:hover{
+    background: rgba(87, 90, 95, 0.834);
+}
+
+.navbar a:hover {
+    color: rgb(48, 28, 130);
+    transition: color 0.3s ease;
+    border: none;
+}
+
+
+.navbar-brand .logo {
+    height: 70px;
+    filter: drop-shadow(10px 10px 10px #555);
+}
+
+.navbar-title {
+    font-family: "Rampart One", sans-serif;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: black;
+    margin-left: 5px;
+    font-style: normal;
+ 
+}
+.library_content_title {
+    font-family: "Rampart One", sans-serif;
+    font-weight: bold;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  ul li {
+    padding: 10px;
+    font-size: 1.5rem;
+  }
+  
+  ul li a {
+    text-decoration: none;
+    color: blue;
+  }
+  
+  ul li a:hover {
+    text-decoration: underline;
+    color: darkblue;
+  }
+  #mars-container {
+    width: 60%;              /* Szerokość na 60% */
+    height: 60vh;            /* Wysokość na 60% wysokości ekranu */
+    position: relative;      /* Ustawienie pozycji */
+    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); /* Efekt rozmycia z przezroczystą białą ramką */
+}
+#mars-info {
+    width: 38%;                /* Szerokość ustawiona na 40%, ponieważ 60% zajmuje Mars */
+    height: auto;              /* Dopasowanie wysokości do zawartości */
+    background-color: #191b1e9f; /* Kolor tła */
+    padding: 20px;             /* Wewnętrzny odstęp dla treści */
+    color: #dcdcdc;
+    border-radius: 15px;       /* Zaokrąglone rogi */
+    border: 2px solid #ddd;    /* Kolor ramki i jej grubość */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Dodanie lekkiego cienia */
+    float: right;              /* Wyrównanie do prawej */
+    margin-left: 20px;         /* Odstęp między planetą a informacjami */
+}

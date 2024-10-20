@@ -45,30 +45,6 @@ earthMesh.castShadow = true;
 earthMesh.receiveShadow = true;
 earthPlanet.add(earthMesh);
 
-// Księżyc
-const moonRadius = 2.73;
-const moonDistance = 603;
-const moonPivot = new THREE.Object3D();  // Przegub dla orbity Księżyca
-earthPlanet.add(moonPivot);  // Dodaj przegub do Ziemi
-
-const createMoon = (r = moonRadius) => {
-    const moonGeo = new THREE.SphereGeometry(r, 20, 20);
-    const moonMat = new THREE.MeshPhongMaterial({
-        map: loader.load("../../assets/textures/earth/Moon/8k_moon.jpg"),
-        shininess: 15  // Blask Księżyca
-       
-    });
-    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-    moonMesh.position.set(moonDistance, 0, 0);  // Ustawienie pozycji Księżyca
-    moonMesh.castShadow = true;
-    moonMesh.receiveShadow = true;
-    return moonMesh;
-};
-const moon = createMoon();
-moonPivot.add(moon);  // Dodaj Księżyc do przegubu
-
-
-
 const lightsAtNight = new THREE.MeshBasicMaterial({
     map: loader.load("../../assets/textures/earth/8k_earth_nightmap.jpg"),
     blending: THREE.AdditiveBlending,
@@ -91,6 +67,28 @@ const fresnelMat = getFresnelMat();
 const glowMesh = new THREE.Mesh(earthMesh.geometry, fresnelMat);
 glowMesh.scale.setScalar(1.0157);
 earthPlanet.add(glowMesh);
+
+// Księżyc
+const moonRadius = 2.73;
+const moonDistance = 603;
+const moonPivot = new THREE.Object3D();  // Przegub dla orbity Księżyca
+earthPlanet.add(moonPivot);  // Dodaj przegub do Ziemi
+
+const createMoon = (r = moonRadius) => {
+    const moonGeo = new THREE.SphereGeometry(r, 20, 20);
+    const moonMat = new THREE.MeshPhongMaterial({
+        map: loader.load("../../assets/textures/earth/Moon/8k_moon.jpg"),
+        shininess: 15  // Blask Księżyca
+       
+    });
+    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    moonMesh.position.set(moonDistance, 0, 0);  // Ustawienie pozycji Księżyca
+    moonMesh.castShadow = true;
+    moonMesh.receiveShadow = true;
+    return moonMesh;
+};
+const moon = createMoon();
+moonPivot.add(moon);  // Dodaj Księżyc do przegubu
 
 
 //horyzont kosmosu

@@ -1,16 +1,15 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
-import { getFresnelMat } from "../../src/utils/getFresnelMat.js";
-import getStarfield from "../../src/scenes/getStarfield.js";
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.169/examples/jsm/loaders/GLTFLoader.js';
 import { createSceneCameraAndRenderer } from '../../src/components/controls/createSceneCameraAndRenderer.js';
 import { createPlanet } from '../../src/models/createPlanet.js';
 import { addSunAndLight } from '../../src/animations/getLightSun.js';
 import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
+import getStarfield from '../../src/scenes/getStarfield.js';
 
 //Tablica zmiennych
 const container = document.getElementById('mars-container');
-const w = window.innerWidth;
-const h = window.innerHeight;
+const w = container.clientWidth;   // Prawidłowe pobieranie szerokości kontenera
+const h = container.clientHeight;  // Prawidłowe pobieranie wysokości kontenera
 
 const planetRadius = 5.32;
 const axialTilt = -25.19;
