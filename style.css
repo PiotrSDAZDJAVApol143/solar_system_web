@@ -111,3 +111,9 @@ ul {
     float: right;              /* Wyrównanie do prawej */
     margin-left: 20px;         /* Odstęp między planetą a informacjami */
 }
+.label {
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    text-shadow: 0 0 5px black;
+  }

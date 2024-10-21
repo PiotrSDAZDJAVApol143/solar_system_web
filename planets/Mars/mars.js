@@ -9,14 +9,20 @@ import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
 import getStarfield from '../../src/scenes/getStarfield.js';
 import { cleanMaterial } from '../../src/utils/cleanMaterial.js';
 import { handleWindowResize } from '../../src/scenes/handleWindowResize.js';
+import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.17.0/dist/lil-gui.esm.min.js';
+import { CSS2DRenderer, CSS2DObject } from 'https://cdn.jsdelivr.net/npm/three@0.169/examples/jsm/renderers/CSS2DRenderer.js';
 
 // Zmienne globalne dla modułu
 let scene, camera, renderer, controls, animateId;
 let marsPlanet, phobosPivot, deimosPivot;
-let phobosMesh, deimosMesh;
+let phobosMesh, deimosMesh, phobosLabel, deimosLabel;
 let sunMesh, sunLight, sunPivot, ambientLight;
-let container;
+let container, labelRenderer;
 let onWindowResize;
+let gui;
+let guiParams = {
+    showObjectNames: false,
+};
 
 // Parametry planety i innych obiektów
 const planetRadius = 5.32;
@@ -34,6 +40,7 @@ const deimosRotationDuration = 37.9;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 3;
 const rotationAngle = 260;
+
 
 export function initializeMarsScene(containerElement) {
     container = containerElement;
@@ -102,6 +109,7 @@ export function initializeMarsScene(containerElement) {
         phobosMesh.shininess = 10;
         phobosMesh.castShadow = true;
         phobosPivot.add(phobosMesh);
+        createPhobosLabel();
     });
 
 
@@ -115,10 +123,32 @@ export function initializeMarsScene(containerElement) {
         deimosMesh.rotation.z = THREE.MathUtils.degToRad(1.78);
         deimosMesh.castShadow = true;
         deimosPivot.add(deimosMesh);
+        createDeimosLabel();
     });
-    onWindowResize = function() {
-        handleWindowResize(camera, renderer, container);
+    onWindowResize = function () {
+        handleWindowResize(camera, renderer, container, labelRenderer);
     };
+    // Inicjalizacja GUI
+    gui = new GUI();
+    gui.add(guiParams, 'showObjectNames').name('Pokaż nazwy obiektów').onChange((value) => {
+        toggleObjectNames(value);
+    });
+
+    // Ustaw pozycję GUI w górnym lewym rogu
+    gui.domElement.style.position = 'absolute';
+    gui.domElement.style.top = '10px';
+    gui.domElement.style.left = '10px';
+
+    // Dodaj GUI do kontenera lub document.body
+    container.appendChild(gui.domElement);
+
+    // Inicjalizacja CSS2DRenderer
+    labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(container.clientWidth, container.clientHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none'; 
+    container.appendChild(labelRenderer.domElement);
     // Rozpoczęcie animacji
     window.addEventListener('resize', onWindowResize, false);
     animate();
@@ -160,9 +190,21 @@ export function disposeMarsScene() {
         window.removeEventListener('resize', onWindowResize);
         onWindowResize = null;
     }
+    if (gui) {
+        gui.destroy();
+        gui = null;
+    }
+
+    if (labelRenderer && labelRenderer.domElement) {
+        if (labelRenderer.domElement.parentNode) {
+            labelRenderer.domElement.parentNode.removeChild(labelRenderer.domElement);
+        }
+        labelRenderer = null;
+    }
 }
 function animate() {
     animateId = requestAnimationFrame(animate);
+    controls.update();
 
     // Rotacja Planety
     marsPlanet.rotation.y += (2 * Math.PI) / (marsDay * 60);
@@ -182,9 +224,59 @@ function animate() {
     sunMesh.position.x = Math.cos(-time) * sunDistance;
     sunMesh.position.z = Math.sin(-time) * sunDistance;
     sunLight.position.copy(sunMesh.position);
-    sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z);
-
+    //sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z);
     renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
     console.log("Animacja działa");
 }
+function toggleObjectNames(show) {
+    if (phobosLabel) phobosLabel.visible = show;
+    if (deimosLabel) deimosLabel.visible = show;
+}
+
+function createPhobosLabel() {
+    const phobosDiv = document.createElement('div');
+    phobosDiv.className = 'label';
+    phobosDiv.textContent = 'Fobos';
+    phobosDiv.style.marginTop = '-1em';
+    const phobosLabelObject = new CSS2DObject(phobosDiv);
+    phobosLabelObject.position.set(0, 0, 0);
+    phobosMesh.add(phobosLabelObject);
+    phobosLabel = phobosLabelObject;
+    phobosLabel.visible = guiParams.showObjectNames; // Ustawienie widoczności zgodnie z GUI
+}
+
+function createDeimosLabel() {
+    const deimosDiv = document.createElement('div');
+    deimosDiv.className = 'label';
+    deimosDiv.textContent = 'Deimos';
+    deimosDiv.style.marginTop = '-1em';
+    const deimosLabelObject = new CSS2DObject(deimosDiv);
+    deimosLabelObject.position.set(0, 0, 0);
+    deimosMesh.add(deimosLabelObject);
+    deimosLabel = deimosLabelObject;
+    deimosLabel.visible = guiParams.showObjectNames;
+}
+
+//function createLabels() {
+//    // Fobos
+//    const phobosDiv = document.createElement('div');
+//    phobosDiv.className = 'label';
+//    phobosDiv.textContent = 'Fobos';
+//    phobosDiv.style.marginTop = '-1em';
+//    const phobosLabelObject = new CSS2DObject(phobosDiv);
+//    phobosLabelObject.position.set(0, 0, 0); // Pozycja względem phobosMesh
+//    phobosMesh.add(phobosLabelObject);
+//    phobosLabel = phobosLabelObject;
+//  
+//    // Deimos
+//    const deimosDiv = document.createElement('div');
+//    deimosDiv.className = 'label';
+//    deimosDiv.textContent = 'Deimos';
+//    deimosDiv.style.marginTop = '-1em';
+//    const deimosLabelObject = new CSS2DObject(deimosDiv);
+//    deimosLabelObject.position.set(0, 0, 0); // Pozycja względem deimosMesh
+//    deimosMesh.add(deimosLabelObject);
+//    deimosLabel = deimosLabelObject;
+//  }
 console.log("mars.js załadowany!");
