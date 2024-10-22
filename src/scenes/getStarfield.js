@@ -1,3 +1,4 @@
+//getStarfield.js
 import * as THREE from "three";
 
 export default function getStarfield({ numStars = 800 } = {}) {

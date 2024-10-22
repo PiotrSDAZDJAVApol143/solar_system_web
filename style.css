@@ -13,7 +13,8 @@ body, html {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;  /* Sprawi, że kontener będzie zajmować całą wysokość ekranu */
+    margin-top: 3vh;
+  /*  height: 100vh;  /* Sprawi, że kontener będzie zajmować całą wysokość ekranu */
 }
 
 
@@ -94,25 +95,25 @@ ul {
     color: darkblue;
   }
   #mars-container {
-    width: 60%;              /* Szerokość na 60% */
-    height: 60vh;            /* Wysokość na 60% wysokości ekranu */
-    position: relative;      /* Ustawienie pozycji */
-    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); /* Efekt rozmycia z przezroczystą białą ramką */
+    width: 60%;              
+    height: 60vh;            
+    position: relative;      
+    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); 
 }
 #mars-info {
-    width: 38%;                /* Szerokość ustawiona na 40%, ponieważ 60% zajmuje Mars */
-    height: auto;              /* Dopasowanie wysokości do zawartości */
-    background-color: #191b1e9f; /* Kolor tła */
-    padding: 20px;             /* Wewnętrzny odstęp dla treści */
+    width: 38%;                
+    height: auto;              
+    background-color: #191b1e9f; 
+    padding: 20px;             
     color: #dcdcdc;
-    border-radius: 15px;       /* Zaokrąglone rogi */
-    border: 2px solid #ddd;    /* Kolor ramki i jej grubość */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Dodanie lekkiego cienia */
-    float: right;              /* Wyrównanie do prawej */
-    margin-left: 20px;         /* Odstęp między planetą a informacjami */
+    border-radius: 15px;       
+    border: 2px solid #ddd;    
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    float: right;             
+    margin-left: 20px;      
 }
 .label {
-    color: white;
+    color: rgba(131, 125, 125, 0.742);
     font-family: Arial, sans-serif;
     font-size: 14px;
     text-shadow: 0 0 5px black;

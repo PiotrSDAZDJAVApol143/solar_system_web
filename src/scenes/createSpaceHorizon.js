@@ -1,3 +1,4 @@
+//createSpaceHorizon.js
 import * as THREE from 'three';
 
 export function createSpaceHorizon(scene, spaceHorizonDistance){
@@ -9,6 +10,7 @@ const spaceMaterial = new THREE.MeshBasicMaterial({
     side: THREE.BackSide  // Odwrócenie normalnych, żeby tekstura była widoczna od wewnątrz
 });
 const spaceSphere = new THREE.Mesh(spaceGeometry, spaceMaterial);
+
 scene.add(spaceSphere);
 return spaceSphere;
 }
