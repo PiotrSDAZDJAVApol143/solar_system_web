@@ -7,11 +7,11 @@ import { createPlanet } from '../../src/models/createPlanet.js';
 import { addSunAndLight } from '../../src/animations/getLightSun.js';
 import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
 import getStarfield from '../../src/scenes/getStarfield.js';
-import { cleanMaterial } from '../../src/utils/cleanMaterial.js';
 import { handleWindowResize } from '../../src/scenes/handleWindowResize.js';
 import { initializeGUI } from '../../src/components/controls/guiControls.js';
 import { disposeScene } from '../../src/utils/disposeScene.js';
 import { initializeLabelRenderer, createLabel, updateLabelVisibility } from '../../src/utils/labelUtils.js';
+import { OrbitTail } from '../../src/utils/orbitTail.js';
 
 // Zmienne globalne dla modułu
 let scene, camera, renderer, controls, animateId;
@@ -21,11 +21,9 @@ let sunMesh, sunLight, sunPivot, ambientLight;
 let container, labelRenderer;
 let onWindowResize;
 let gui;
-let guiParams = {
-    showObjectNames: false,
-};
-let raycaster = new THREE.Raycaster();
-let occlusionObjects = [];
+
+// Tablica do przechowywania instancji OrbitTail
+let orbitTails = [];
 
 // Parametry planety i innych obiektów
 const planetRadius = 5.32;
@@ -44,6 +42,17 @@ const spaceHorizonDistance = 500000;
 const ambientLightPower = 3;
 const rotationAngle = 260;
 
+// Parametry GUI
+let guiParams = {
+    showObjectNames: false,
+    showOrbitTails: false, // Przełącznik dla ogonów orbity
+};
+
+// Inicjalizacja raycastera
+let raycaster = new THREE.Raycaster();
+
+// Definicja occlusionObjects globalnie
+let occlusionObjects = [];
 
 export function initializeMarsScene(containerElement) {
     container = containerElement;
@@ -109,6 +118,8 @@ export function initializeMarsScene(containerElement) {
     labelRenderer = initializeLabelRenderer(container);
 
     const loader3d = new GLTFLoader();
+
+    // Ładowanie Phobosa
     loader3d.load('../../assets/textures/3D_models/24878_Phobos_1_1000.glb', function (gltf) {
         phobosMesh = gltf.scene;
         const phobosScale = 0.0176;  // Skala Fobosa
@@ -119,12 +130,20 @@ export function initializeMarsScene(containerElement) {
         phobosMesh.castShadow = true;
         phobosPivot.add(phobosMesh);
         occlusionObjects.push(phobosMesh);
-        phobosLabel = createLabel("Fobos");
+
+        // Tworzenie etykiety dla Phobosa
+        phobosLabel = createLabel("Phobos");
         phobosMesh.add(phobosLabel);
         phobosLabel.visible = guiParams.showObjectNames;
+
+         // Tworzenie ogona orbity dla Phobosa
+         const phobosMaxPoints = calculateMaxPoints(phobosOrbitDuration);
+         const phobosOrbitTail = new OrbitTail(phobosMesh, scene, phobosMaxPoints, { color: 0xcccccc, opacity: 0.5 });
+         phobosOrbitTail.hide(); // Ukryj ogon na starcie
+         orbitTails.push(phobosOrbitTail);
     });
 
-
+    // Ładowanie Deimosa
     loader3d.load('../../assets/textures/3D_models/24879_Deimos_1_1000.glb', function (gltf) {
         deimosMesh = gltf.scene;
         console.log("Deimos załadowany:", deimosMesh);
@@ -136,21 +155,47 @@ export function initializeMarsScene(containerElement) {
         deimosMesh.castShadow = true;
         deimosPivot.add(deimosMesh);
         occlusionObjects.push(deimosMesh);
+
+        // Tworzenie etykiety dla Deimosa
         deimosLabel = createLabel("Deimos");
         deimosMesh.add(deimosLabel);
         deimosLabel.visible = guiParams.showObjectNames;
+
+        // Tworzenie ogona orbity dla Deimosa
+        const deimosMaxPoints = calculateMaxPoints(deimosOrbitDuration);
+        const deimosOrbitTail = new OrbitTail(deimosMesh, scene, deimosMaxPoints, { color: 0xcccccc, opacity: 0.5 });
+        deimosOrbitTail.hide(); // Ukryj ogon na starcie
+        orbitTails.push(deimosOrbitTail);
     });
-    onWindowResize = function () {
-        handleWindowResize(camera, renderer, container, labelRenderer);
-    };
-    // Inicjalizacja GUI
+
+    // Inicjalizacja GUI z dodatkowym przełącznikiem dla ogonów orbity
     gui = initializeGUI(guiParams, toggleObjectNames);
     container.appendChild(gui.domElement);
 
-    // Rozpoczęcie animacji
+    // Dodanie przełącznika do GUI dla ogonów orbity
+    gui.add(guiParams, 'showOrbitTails')
+       .name('Pokaż ogony orbity')
+       .onChange((value) => {
+           orbitTails.forEach(tail => {
+               if (value) {
+                   tail.show();
+               } else {
+                   tail.hide();
+                   tail.tailPoints = []; // Opcjonalnie wyczyść ogon
+               }
+           });
+       });
+
+    // Dodanie nasłuchiwacza zmiany rozmiaru okna
+    onWindowResize = function () {
+        handleWindowResize(camera, renderer, container, labelRenderer);
+    };
     window.addEventListener('resize', onWindowResize, false);
+
+    // Rozpoczęcie animacji
     animate();
 }
+
 export function disposeMarsScene() {
     disposeScene({
         scene,
@@ -161,7 +206,12 @@ export function disposeMarsScene() {
         animateId,
         container,
         onWindowResize,
+        occlusionObjects, // Dodajemy occlusionObjects do parametrów
     });
+
+    // Usuwanie ogonów orbity
+    orbitTails.forEach(tail => tail.dispose());
+    orbitTails = [];
 
     // Resetuj zmienne
     scene = null;
@@ -187,6 +237,7 @@ export function disposeMarsScene() {
     raycaster = null;
     occlusionObjects = [];
 }
+
 function animate() {
     animateId = requestAnimationFrame(animate);
     controls.update();
@@ -212,6 +263,7 @@ function animate() {
     //sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z);
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
+
     // Aktualizacja widoczności etykiet księżyców
     if (phobosMesh && phobosLabel) {
         updateLabelVisibility(phobosLabel, phobosMesh, camera, raycaster, occlusionObjects, guiParams);
@@ -220,10 +272,37 @@ function animate() {
     if (deimosMesh && deimosLabel) {
         updateLabelVisibility(deimosLabel, deimosMesh, camera, raycaster, occlusionObjects, guiParams);
     }
+
+    // Aktualizacja ogonów orbity, jeśli są włączone
+    if (guiParams.showOrbitTails) {
+        // Phobos
+        if (phobosMesh) {
+            orbitTails.forEach(tail => {
+                if (tail.moon === phobosMesh) {
+                    tail.update();
+                }
+            });
+        }
+
+        // Deimos
+        if (deimosMesh) {
+            orbitTails.forEach(tail => {
+                if (tail.moon === deimosMesh) {
+                    tail.update();
+                }
+            });
+        }
+    }
+
     console.log("Animacja działa");
 }
+
 function toggleObjectNames(show) {
     if (phobosLabel) phobosLabel.visible = show;
     if (deimosLabel) deimosLabel.visible = show;
 }
+function calculateMaxPoints(orbitDuration) {
+    return Math.round(0.6 * orbitDuration * 60);
+}
+
 console.log("mars.js załadowany!");
