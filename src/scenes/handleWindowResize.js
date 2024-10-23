@@ -1,3 +1,4 @@
+//handleWindowResize.js
 export function handleWindowResize(camera, renderer, container, labelRenderer) {
     if (camera && renderer && container) {
         const w = container.clientWidth;

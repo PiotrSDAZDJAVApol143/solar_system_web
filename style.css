@@ -117,4 +117,7 @@ ul {
     font-family: Arial, sans-serif;
     font-size: 14px;
     text-shadow: 0 0 5px black;
+    position: relative;
+    cursor: pointer;
+    pointer-events: auto;
   }

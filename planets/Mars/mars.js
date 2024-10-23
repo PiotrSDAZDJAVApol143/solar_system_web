@@ -1,6 +1,7 @@
 // mars.js
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169/build/three.module.js';
+import * as TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.169/examples/jsm/loaders/GLTFLoader.js';
 import { createSceneCameraAndRenderer } from '../../src/components/controls/createSceneCameraAndRenderer.js';
 import { createPlanet } from '../../src/models/createPlanet.js';
@@ -21,6 +22,9 @@ let sunMesh, sunLight, sunPivot, ambientLight;
 let container, labelRenderer;
 let onWindowResize;
 let gui;
+let currentTargetObject = null;
+let isTweening = false;
+let isFollowingObject = false;
 
 // Tablica do przechowywania instancji OrbitTail
 let orbitTails = [];
@@ -41,6 +45,9 @@ const deimosRotationDuration = 37.9;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 3;
 const rotationAngle = 260;
+const phobosRadius = 0.017;
+const deimosRadius = 0.0097;
+
 
 // Parametry GUI
 let guiParams = {
@@ -63,7 +70,7 @@ export function initializeMarsScene(containerElement) {
     }
     raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 0;
-    
+
     console.log("Wymiary mars-container:", container.clientWidth, container.clientHeight);
     const w = container.clientWidth;
     const h = container.clientHeight;
@@ -93,6 +100,10 @@ export function initializeMarsScene(containerElement) {
     marsMesh.receiveShadow = true;
     marsPlanet.add(marsMesh);
     occlusionObjects.push(marsMesh);
+
+    // Przypisanie promienia do userData
+    marsMesh.userData.radius = planetRadius;
+    marsMesh.name = "Mars";
 
     // Horyzont kosmosu
     createSpaceHorizon(scene, spaceHorizonDistance);
@@ -131,16 +142,29 @@ export function initializeMarsScene(containerElement) {
         phobosPivot.add(phobosMesh);
         occlusionObjects.push(phobosMesh);
 
+        // Przypisz właściwości do Phobosa i jego dzieci
+        setMeshProperties(phobosMesh, "Phobos", phobosRadius);
+
+        phobosMesh.userData.radius = phobosRadius;
+        phobosMesh.name = "Phobos";
+
         // Tworzenie etykiety dla Phobosa
         phobosLabel = createLabel("Phobos");
         phobosMesh.add(phobosLabel);
         phobosLabel.visible = guiParams.showObjectNames;
 
-         // Tworzenie ogona orbity dla Phobosa
-         const phobosMaxPoints = calculateMaxPoints(phobosOrbitDuration);
-         const phobosOrbitTail = new OrbitTail(phobosMesh, scene, phobosMaxPoints, { color: 0xcccccc, opacity: 0.5 });
-         phobosOrbitTail.hide(); // Ukryj ogon na starcie
-         orbitTails.push(phobosOrbitTail);
+        // Dodaj nasłuchiwanie zdarzenia kliknięcia na etykietę Phobosa
+        phobosLabel.element.addEventListener('click', (event) => {
+            event.stopPropagation();
+            focusOnObject(phobosMesh);
+        });
+
+
+        // Tworzenie ogona orbity dla Phobosa
+        const phobosMaxPoints = calculateMaxPoints(phobosOrbitDuration);
+        const phobosOrbitTail = new OrbitTail(phobosMesh, scene, phobosMaxPoints, { color: 0xcccccc, opacity: 0.5 });
+        phobosOrbitTail.hide(); // Ukryj ogon na starcie
+        orbitTails.push(phobosOrbitTail);
     });
 
     // Ładowanie Deimosa
@@ -156,11 +180,22 @@ export function initializeMarsScene(containerElement) {
         deimosPivot.add(deimosMesh);
         occlusionObjects.push(deimosMesh);
 
+        // Przypisz właściwości do Deimosa i jego dzieci
+        setMeshProperties(deimosMesh, "Deimos", deimosRadius);
+
+        deimosMesh.userData.radius = deimosScale;
+        deimosMesh.name = "Deimos";
+
         // Tworzenie etykiety dla Deimosa
         deimosLabel = createLabel("Deimos");
         deimosMesh.add(deimosLabel);
         deimosLabel.visible = guiParams.showObjectNames;
 
+        // Dodaj nasłuchiwanie zdarzenia kliknięcia na etykietę Deimosa
+        deimosLabel.element.addEventListener('click', (event) => {
+            event.stopPropagation();
+            focusOnObject(deimosMesh);
+        });
         // Tworzenie ogona orbity dla Deimosa
         const deimosMaxPoints = calculateMaxPoints(deimosOrbitDuration);
         const deimosOrbitTail = new OrbitTail(deimosMesh, scene, deimosMaxPoints, { color: 0xcccccc, opacity: 0.5 });
@@ -174,23 +209,27 @@ export function initializeMarsScene(containerElement) {
 
     // Dodanie przełącznika do GUI dla ogonów orbity
     gui.add(guiParams, 'showOrbitTails')
-       .name('Pokaż ogony orbity')
-       .onChange((value) => {
-           orbitTails.forEach(tail => {
-               if (value) {
-                   tail.show();
-               } else {
-                   tail.hide();
-                   tail.tailPoints = []; // Opcjonalnie wyczyść ogon
-               }
-           });
-       });
+        .name('Pokaż ogony orbity')
+        .onChange((value) => {
+            orbitTails.forEach(tail => {
+                if (value) {
+                    tail.show();
+                } else {
+                    tail.hide();
+                    tail.tailPoints = []; // Opcjonalnie wyczyść ogon
+                }
+            });
+        });
+
+    gui.add({ stopFollowing: () => { currentTargetObject = null; isFollowingObject = false; } }, 'stopFollowing').name('Zatrzymaj śledzenie');
 
     // Dodanie nasłuchiwacza zmiany rozmiaru okna
     onWindowResize = function () {
         handleWindowResize(camera, renderer, container, labelRenderer);
     };
     window.addEventListener('resize', onWindowResize, false);
+
+    renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
 
     // Rozpoczęcie animacji
     animate();
@@ -206,7 +245,7 @@ export function disposeMarsScene() {
         animateId,
         container,
         onWindowResize,
-        occlusionObjects, // Dodajemy occlusionObjects do parametrów
+        occlusionObjects,
     });
 
     // Usuwanie ogonów orbity
@@ -241,6 +280,7 @@ export function disposeMarsScene() {
 function animate() {
     animateId = requestAnimationFrame(animate);
     controls.update();
+    TWEEN.update();
 
     // Rotacja Planety
     marsMesh.rotation.y += (2 * Math.PI) / (marsDay * 60);
@@ -254,6 +294,15 @@ function animate() {
         phobosPivot.rotation.y += (2 * Math.PI) / (phobosOrbitDuration * 60);  // Orbita
         phobosMesh.rotation.x += (2 * Math.PI) / (phobosRotationDuration * 60);  // Rotacja synchroniczna
     }
+
+    // Aktualizacja pozycji kamery, jeśli śledzimy obiekt
+    if (currentTargetObject) {
+        const targetPosition = new THREE.Vector3();
+        currentTargetObject.getWorldPosition(targetPosition);
+        controls.target.copy(targetPosition);
+        controls.update();
+    }
+
 
     // Orbita Słońca
     const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2;
@@ -305,4 +354,115 @@ function calculateMaxPoints(orbitDuration) {
     return Math.round(0.6 * orbitDuration * 60);
 }
 
+// NOWE FUNKCJE
+
+// Funkcja obsługi kliknięcia
+function onDocumentMouseDown(event) {
+    event.preventDefault();
+
+    if (isFollowingObject) return;
+
+
+    /*
+    // Pobierz prostokąt ograniczający płótna
+    const rect = renderer.domElement.getBoundingClientRect();
+
+    // Obliczenie pozycji myszy w normalizowanych współrzędnych urządzenia (-1 do +1)
+    const mouse = new THREE.Vector2();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    // Ustawienie raycastera na podstawie pozycji myszy i kamery
+    raycaster.setFromCamera(mouse, camera);
+
+    // Określenie obiektów, które mają być testowane przez raycaster
+    const clickableObjects = [marsMesh, phobosMesh, deimosMesh].filter(obj => obj !== undefined);
+
+    // Przeprowadzenie testu raycastera
+    const intersects = raycaster.intersectObjects(clickableObjects, true);
+
+    // Logowanie wyników do debugowania
+    console.log('Intersects:', intersects);
+
+    if (intersects.length > 0) {
+        const intersectedObject = intersects[0].object;
+        onObjectClicked(intersectedObject);
+    }
+        */
+}
+
+// Funkcja wywoływana po kliknięciu na obiekt
+function onObjectClicked(object) {
+    if (object && object.userData && object.userData.radius && object.name) {
+        console.log('Kliknięto na obiekt:', object.name);
+
+        // Ustawienie kamery do śledzenia obiektu
+        focusOnObject(object);
+
+        // Jeśli kliknięto na Marsa, resetuj `currentTargetObject`
+        if (object.name === "Mars") {
+            currentTargetObject = null;
+        }
+    } else {
+        console.log('Kliknięty obiekt nie ma właściwości userData.radius lub name.');
+    }
+}
+
+// Funkcja ustawiająca kamerę na wybrany obiekt
+function focusOnObject(object) {
+    // Obliczenie minimalnej odległości zbliżenia
+    const radius = object.userData.radius;
+    const minDistance = radius * 2 * 1.2; // (promień * 2) * 120%
+
+    // Ustawienie kontrolek OrbitControls
+    controls.minDistance = minDistance;
+    controls.maxDistance = minDistance * 10; // Możesz dostosować wartość maxDistance
+
+    // Ustawienie nowego celu dla OrbitControls
+    const targetPosition = new THREE.Vector3();
+    object.getWorldPosition(targetPosition);
+
+    // Animacja przejścia kamery
+    const from = {
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z,
+    };
+
+    const to = {
+        x: targetPosition.x + (camera.position.x - controls.target.x),
+        y: targetPosition.y + (camera.position.y - controls.target.y),
+        z: targetPosition.z + (camera.position.z - controls.target.z),
+    };
+
+    isTweening = true;
+    isFollowingObject = true
+
+    const tween = new TWEEN.Tween(from)
+        .to(to, 3000)
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .onUpdate(() => {
+            camera.position.set(from.x, from.y, from.z);
+            controls.update();
+        })
+        .onComplete(() => {
+            isTweening = false;
+            currentTargetObject = object;
+            controls.target.copy(targetPosition);
+            controls.update();
+        })
+        .start();
+}
+function setMeshProperties(object, name, radius) {
+    object.name = name;
+    object.userData.radius = radius;
+    object.traverse(function (child) {
+        if (child.isMesh) {
+            child.name = name;
+            child.userData.radius = radius;
+        }
+    });
+}
+
 console.log("mars.js załadowany!");
+export { focusOnObject };

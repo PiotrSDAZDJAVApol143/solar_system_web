@@ -1,6 +1,7 @@
 // labelUtils.js
 import { CSS2DRenderer, CSS2DObject } from 'https://cdn.jsdelivr.net/npm/three@0.169/examples/jsm/renderers/CSS2DRenderer.js';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169/build/three.module.js';
+//import { focusOnObject } from '../../planets/Mars/mars.js';
 
 export function initializeLabelRenderer(container) {
     const labelRenderer = new CSS2DRenderer();
@@ -17,6 +18,15 @@ export function createLabel(text) {
     div.className = 'label';
     div.textContent = text;
     div.style.marginTop = '-1em';
+    div.style.pointerEvents = 'auto';
+    div.style.cursor = 'pointer';
+
+    //nasłuchiwanie zdarzenia kliknięcia
+    div.addEventListener('click', (event) => {
+        event.stopPropagation(); // Zapobiegamy propagacji zdarzenia do elementów poniżej
+        focusOnObject(object); // Wywołujemy funkcję zbliżenia do obiektu
+    });
+
     const labelObject = new CSS2DObject(div);
     labelObject.position.set(0, 0, 0);
     return labelObject;
