@@ -21,11 +21,11 @@ export function createLabel(text) {
     div.style.pointerEvents = 'auto';
     div.style.cursor = 'pointer';
 
-    //nasłuchiwanie zdarzenia kliknięcia
-    div.addEventListener('click', (event) => {
-        event.stopPropagation(); // Zapobiegamy propagacji zdarzenia do elementów poniżej
-        focusOnObject(object); // Wywołujemy funkcję zbliżenia do obiektu
-    });
+//   //nasłuchiwanie zdarzenia kliknięcia
+//   div.addEventListener('click', (event) => {
+//       event.stopPropagation(); // Zapobiegamy propagacji zdarzenia do elementów poniżej
+//       focusOnObject(object); // Wywołujemy funkcję zbliżenia do obiektu
+//   });
 
     const labelObject = new CSS2DObject(div);
     labelObject.position.set(0, 0, 0);

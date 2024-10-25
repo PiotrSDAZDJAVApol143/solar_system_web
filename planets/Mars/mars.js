@@ -25,6 +25,14 @@ let gui;
 let currentTargetObject = null;
 let isTweening = false;
 let isFollowingObject = false;
+let initialCameraPosition = null;
+let initialControlsTarget = null;
+let initialMinDistance = null;
+let initialMaxDistance = null;
+let userIsInteracting = false;
+let previousTargetPosition = new THREE.Vector3();
+
+
 
 // Tablica do przechowywania instancji OrbitTail
 let orbitTails = [];
@@ -68,6 +76,7 @@ export function initializeMarsScene(containerElement) {
     if (scene) {
         disposeMarsScene();
     }
+
     raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 0;
 
@@ -82,6 +91,10 @@ export function initializeMarsScene(containerElement) {
     renderer = result.renderer;
     controls = result.controls;
 
+    initialCameraPosition = camera.position.clone();
+    initialControlsTarget = controls.target.clone();
+    controls.addEventListener('start', () => { userIsInteracting = true; });
+    controls.addEventListener('end', () => { userIsInteracting = false; });
 
     // Włącz obsługę cieni w rendererze
     renderer.shadowMap.enabled = true;
@@ -118,6 +131,11 @@ export function initializeMarsScene(containerElement) {
     // Gwiazdy
     const stars = getStarfield({ numStars: 500 });
     scene.add(stars);
+
+    controls.minDistance = planetRadius + planetRadius * 0.2;
+    controls.maxDistance = 350;
+    initialMinDistance = controls.minDistance;
+    initialMaxDistance = controls.maxDistance;
 
     // Ładowanie Fobosa i Deimosa
     phobosPivot = new THREE.Object3D();
@@ -221,7 +239,7 @@ export function initializeMarsScene(containerElement) {
             });
         });
 
-    gui.add({ stopFollowing: () => { currentTargetObject = null; isFollowingObject = false; } }, 'stopFollowing').name('Zatrzymaj śledzenie');
+    gui.add({ stopFollowing: resetCamera }, 'stopFollowing').name('Zatrzymaj śledzenie');
 
     // Dodanie nasłuchiwacza zmiany rozmiaru okna
     onWindowResize = function () {
@@ -294,15 +312,26 @@ function animate() {
         phobosPivot.rotation.y += (2 * Math.PI) / (phobosOrbitDuration * 60);  // Orbita
         phobosMesh.rotation.x += (2 * Math.PI) / (phobosRotationDuration * 60);  // Rotacja synchroniczna
     }
+ // Aktualizacja pozycji kamery, jeśli śledzimy obiekt i nie jesteśmy w trakcie animacji
+ if (currentTargetObject && !isTweening) {
+    const targetPosition = new THREE.Vector3();
+    currentTargetObject.getWorldPosition(targetPosition);
 
-    // Aktualizacja pozycji kamery, jeśli śledzimy obiekt
-    if (currentTargetObject) {
-        const targetPosition = new THREE.Vector3();
-        currentTargetObject.getWorldPosition(targetPosition);
-        controls.target.copy(targetPosition);
-        controls.update();
-    }
+    // Obliczenie różnicy pozycji (delta)
+    const deltaPosition = new THREE.Vector3().subVectors(targetPosition, previousTargetPosition);
 
+    // Przesunięcie kamery i controls.target o deltaPosition
+    camera.position.add(deltaPosition);
+    controls.target.add(deltaPosition);
+
+    // Zapisanie aktualnej pozycji księżyca na potrzeby następnej klatki
+    previousTargetPosition.copy(targetPosition);
+
+    controls.update();
+} else {
+    // Jeśli nie śledzimy obiektu, normalnie aktualizuj kontrole
+    controls.update();
+}
 
     // Orbita Słońca
     const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2;
@@ -361,34 +390,6 @@ function onDocumentMouseDown(event) {
     event.preventDefault();
 
     if (isFollowingObject) return;
-
-
-    /*
-    // Pobierz prostokąt ograniczający płótna
-    const rect = renderer.domElement.getBoundingClientRect();
-
-    // Obliczenie pozycji myszy w normalizowanych współrzędnych urządzenia (-1 do +1)
-    const mouse = new THREE.Vector2();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    // Ustawienie raycastera na podstawie pozycji myszy i kamery
-    raycaster.setFromCamera(mouse, camera);
-
-    // Określenie obiektów, które mają być testowane przez raycaster
-    const clickableObjects = [marsMesh, phobosMesh, deimosMesh].filter(obj => obj !== undefined);
-
-    // Przeprowadzenie testu raycastera
-    const intersects = raycaster.intersectObjects(clickableObjects, true);
-
-    // Logowanie wyników do debugowania
-    console.log('Intersects:', intersects);
-
-    if (intersects.length > 0) {
-        const intersectedObject = intersects[0].object;
-        onObjectClicked(intersectedObject);
-    }
-        */
 }
 
 // Funkcja wywoływana po kliknięciu na obiekt
@@ -399,7 +400,7 @@ function onObjectClicked(object) {
         // Ustawienie kamery do śledzenia obiektu
         focusOnObject(object);
 
-        // Jeśli kliknięto na Marsa, resetuj `currentTargetObject`
+        // Jeśli kliknięto na Marsa, resetuj currentTargetObject
         if (object.name === "Mars") {
             currentTargetObject = null;
         }
@@ -410,19 +411,31 @@ function onObjectClicked(object) {
 
 // Funkcja ustawiająca kamerę na wybrany obiekt
 function focusOnObject(object) {
+    
     // Obliczenie minimalnej odległości zbliżenia
     const radius = object.userData.radius;
-    const minDistance = radius * 2 * 1.2; // (promień * 2) * 120%
+    const minDistance = radius * 2 * 1.5;
 
     // Ustawienie kontrolek OrbitControls
-    controls.minDistance = minDistance;
-    controls.maxDistance = minDistance * 10; // Możesz dostosować wartość maxDistance
+    controls.minDistance = minDistance *10;
+    controls.maxDistance = minDistance * 20; // Możesz dostosować wartość maxDistance
+    controls.enableRotate = true;
+    controls.enableZoom = true;
+    controls.enablePan = false;
 
-    // Ustawienie nowego celu dla OrbitControls
+    // Pobranie pozycji obiektu (księżyca)
     const targetPosition = new THREE.Vector3();
     object.getWorldPosition(targetPosition);
 
-    // Animacja przejścia kamery
+    isTweening = true;
+    isFollowingObject = true;
+    currentTargetObject = object;
+
+    // Zapisanie początkowej pozycji księżyca
+    controls.target.copy(targetPosition);
+    previousTargetPosition.copy(targetPosition);
+
+    // Opcjonalnie: Animacja przejścia kamery
     const from = {
         x: camera.position.x,
         y: camera.position.y,
@@ -435,11 +448,8 @@ function focusOnObject(object) {
         z: targetPosition.z + (camera.position.z - controls.target.z),
     };
 
-    isTweening = true;
-    isFollowingObject = true
-
     const tween = new TWEEN.Tween(from)
-        .to(to, 3000)
+        .to(to, 2000) // Możesz dostosować czas animacji
         .easing(TWEEN.Easing.Quadratic.InOut)
         .onUpdate(() => {
             camera.position.set(from.x, from.y, from.z);
@@ -447,7 +457,6 @@ function focusOnObject(object) {
         })
         .onComplete(() => {
             isTweening = false;
-            currentTargetObject = object;
             controls.target.copy(targetPosition);
             controls.update();
         })
@@ -462,6 +471,50 @@ function setMeshProperties(object, name, radius) {
             child.userData.radius = radius;
         }
     });
+}
+
+function resetCamera() {
+    isTweening = true;
+    isFollowingObject = false;
+    currentTargetObject = null;
+
+    const from = {
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z,
+        tx: controls.target.x,
+        ty: controls.target.y,
+        tz: controls.target.z
+    };
+
+    const to = {
+        x: initialCameraPosition.x,
+        y: initialCameraPosition.y,
+        z: initialCameraPosition.z,
+        tx: initialControlsTarget.x,
+        ty: initialControlsTarget.y,
+        tz: initialControlsTarget.z
+    };
+
+    controls.minDistance = initialMinDistance;
+    controls.maxDistance = initialMaxDistance;
+    controls.enableRotate = true;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+
+    const tween = new TWEEN.Tween(from)
+        .to(to, 2000) // Możesz dostosować czas animacji
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .onUpdate(() => {
+            camera.position.set(from.x, from.y, from.z);
+            controls.target.set(from.tx, from.ty, from.tz);
+            controls.update();
+        })
+        .onComplete(() => {
+            isTweening = false;
+            controls.update();
+        })
+        .start();
 }
 
 console.log("mars.js załadowany!");
