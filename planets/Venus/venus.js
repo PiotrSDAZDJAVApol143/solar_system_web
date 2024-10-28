@@ -1,15 +1,23 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
-import getStarfield from "../../src/scenes/getStarfield.js";
-import { getFresnelMat } from "../../src/utils/getFresnelMat.js";
+//venus.js
+
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169/build/three.module.js';
+import * as TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js';
 import { createSceneCameraAndRenderer } from '../../src/components/controls/createSceneCameraAndRenderer.js';
 import { createPlanet } from '../../src/models/createPlanet.js';
 import { addSunAndLight } from '../../src/animations/getLightSun.js';
 import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
+import getStarfield from '../../src/scenes/getStarfield.js';
+import { handleWindowResize } from '../../src/scenes/handleWindowResize.js';
+import { disposeScene } from '../../src/utils/disposeScene.js';
+import { loader } from '../../src/models/createPlanet.js';
 
-//Tablica Zmiennych
-const container = document.getElementById('venus-container');
-const w = window.innerWidth;
-const h = window.innerHeight;
+// Zmienne globalne dla modułu
+let scene, camera, renderer, controls, container, animateId;
+let venusPlanet, venusMesh, cloudsMesh;
+let sunMesh, sunLight, sunPivot, ambientLight;
+let onWindowResize;
+let occlusionObjects = [];
+
 const planetRadius = 9.5;
 const axialTilt = -2.64;
 const cameraPosition = planetRadius*2;
@@ -22,56 +30,104 @@ const sunDistance = 169810;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 4;
 const rotationAngle =110;
+const venusTexturePath = "../../assets/textures/venus/8k_venus_surface.jpg";
+const venusBumpMapPath = "../../assets/textures/venus/8k_venus_surface_NRM.png";
+const venusCloudTexturePath = "../../assets/textures/venus/4k_venus_atmosphere.jpg";
 
-const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
+let raycaster = new THREE.Raycaster();
 
-const venusPlanet = new THREE.Group();
-venusPlanet.rotation.z = axialTilt * Math.PI / 180;  // Nachylenie osi 
-scene.add(venusPlanet);
+export function initializeVenusScene(containerElement) {
+    container = containerElement;
 
-const loader = new THREE.TextureLoader();
-const venusMesh = createPlanet(planetRadius, "../../assets/textures/venus/8k_venus_surface.jpg", 30)
-venusPlanet.add(venusMesh);
+    if (scene) {
+        disposeVenusScene();
+    }
 
-const cloudsMat = new THREE.MeshStandardMaterial({
-    map: loader.load("../../assets/textures/venus/4k_venus_atmosphere.jpg"),
-    transparent: true,
-    opacity: 0.95,
-    blending: THREE.NormalBlending,
-});
+    const w = container.clientWidth;
+    const h = container.clientHeight;
 
-const cloudsMesh = new THREE.Mesh(venusMesh.geometry, cloudsMat);
-cloudsMesh.scale.setScalar(1.035);
-venusPlanet.add(cloudsMesh);
+    const result = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
+    scene = result.scene;
+    camera = result.camera;
+    renderer = result.renderer;
+    controls = result.controls;
 
-const fresnelMat = getFresnelMat({
-    rimHex: 0xffcc99,   // Kolor poświaty Wenus
-    facingHex: 0x000000,  // Kolor widoczny od frontu
-    fresnelBias: 0.1,   // Większa intensywność efektu na krawędziach
-    fresnelScale: 1.5,  // Mocniejszy efekt Fresnela
-    fresnelPower: 1.0   // Większe rozciągnięcie efektu Fresnela
-});
-const glowMesh = new THREE.Mesh(venusMesh.geometry, fresnelMat);
-glowMesh.scale.setScalar(1.041);
-venusPlanet.add(glowMesh);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-//horyzont kosmosu
-createSpaceHorizon(scene, spaceHorizonDistance);
+    venusPlanet = new THREE.Group();
+    venusPlanet.rotation.z = axialTilt * Math.PI / 180;
+    scene.add(venusPlanet);
 
-// Słońce
-const { sunMesh, sunLight, sunPivot, ambientLight} = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
+    venusMesh = createPlanet(planetRadius, venusTexturePath, 5, venusBumpMapPath, 1 ); //
+    venusMesh.receiveShadow = true;
+    venusPlanet.add(venusMesh);
 
-// Gwiazdy
-const stars = getStarfield({ numStars: 500 });
-scene.add(stars);
+    const cloudsMat = new THREE.MeshStandardMaterial({
+        map: loader.load(venusCloudTexturePath),
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.NormalBlending,
+    });
+    
+    cloudsMesh = new THREE.Mesh(venusMesh.geometry, cloudsMat); // Przypisanie do globalnej zmiennej
+    cloudsMesh.scale.setScalar(1.035);
+    venusPlanet.add(cloudsMesh);
 
-// Animacja
+    createSpaceHorizon(scene, spaceHorizonDistance);
+    const sunResult = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
+    sunMesh = sunResult.sunMesh;
+    sunLight = sunResult.sunLight;
+    sunPivot = sunResult.sunPivot;
+    ambientLight = sunResult.ambientLight;
+
+    // Gwiazdy
+    const stars = getStarfield({ numStars: 500 });
+    scene.add(stars);
+
+    window.addEventListener('resize', handleWindowResize, false);
+
+    animate();
+}
+
+export function disposeVenusScene() {
+    disposeScene({
+        scene,
+        renderer,
+        controls,
+        animateId,
+        container,
+        onWindowResize,
+        occlusionObjects,
+    });
+
+    // Resetuj zmienne
+    scene = null;
+    renderer = null;
+    controls = null;
+    animateId = null;
+    container = null;
+    onWindowResize = null;
+    venusPlanet = null;
+    venusMesh = null;
+    //cloudsMesh = null;
+    sunMesh = null;
+    sunLight = null;
+    sunPivot = null;
+    ambientLight = null;
+    raycaster = null;
+    occlusionObjects = [];
+}
+
 function animate() {
-    requestAnimationFrame(animate);
+    animateId = requestAnimationFrame(animate);
+    controls.update();
+    TWEEN.update();
 
-    // Rotacja Planety
     venusMesh.rotation.y += (2 * Math.PI) / (venusDay * 60);
-    cloudsMesh.rotation.y += (2 * Math.PI) / (venusCloudRotationDuration * 60);
+    if (cloudsMesh) {
+        cloudsMesh.rotation.y += (2 * Math.PI) / (venusCloudRotationDuration * 60);
+    }
 
     // Okrągła orbita Słońca (przeciwnie do wskazówek zegara)
     const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2; // Obliczamy czas dla pełnej orbity w 10957,5 sekund
@@ -81,12 +137,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-animate();
-
-// Obsługa zmiany rozmiaru okna
-function handleWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+function onDocumentMouseDown(event) {
+    event.preventDefault();
 }
-window.addEventListener('resize', handleWindowResize, false);

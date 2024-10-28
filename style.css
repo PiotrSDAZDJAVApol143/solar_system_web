@@ -100,7 +100,19 @@ ul {
     position: relative;      
     box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); 
 }
-#mars-info {
+#mercury-container {
+    width: 60%;              
+    height: 60vh;            
+    position: relative;      
+    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); 
+}
+#venus-container {
+    width: 60%;              
+    height: 60vh;            
+    position: relative;      
+    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); 
+}
+#planet-info {
     width: 38%;                
     height: auto;              
     background-color: #191b1e9f; 

@@ -2,6 +2,9 @@
 import { loadNavbar } from '../src/components/layout/navbar.js';
 import { loadFooter } from '../src/components/layout/footer.js';
 import { initializeMarsScene, disposeMarsScene } from '../planets/Mars/mars.js';
+import { initializeMercuryScene, disposeMercuryScene } from '../planets/Mercury/mercury.js';
+import { initializeVenusScene, disposeVenusScene } from '../planets/Venus/venus.js';
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -19,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function disposeCurrentScene() {
   disposeMarsScene();
+  disposeMercuryScene();
+  disposeVenusScene();
   // disposeEarthScene();
   // disposeMoonScene();
 }
@@ -74,20 +79,26 @@ function loadLibrary() {
       <li><a href="#" id="mercury-link">Merkury</a></li>
       <li><a href="#" id="venus-link">Wenus</a></li>
       <li><a href="#" id="earth-link">Ziemia</a></li>
-      <li><a href="#" id="moon-link">Księżyc</a></li>
       <li><a href="#" id="mars-link">Mars</a></li>
       <li><a href="#" id="jupiter-link">Jowisz</a></li>
       <li><a href="#" id="saturn-link">Saturn</a></li>
       <li><a href="#" id="uranus-link">Uran</a></li>
-      <li><a href="#" id="uranus-link">Neptun</a></li>
+      <li><a href="#" id="neptun-link">Neptun</a></li>
      
     </ul>
   `;
   setActiveLink("library-link");
 
+  //document.getElementById("sun-link").addEventListener("click", loadSun);
+  document.getElementById("mercury-link").addEventListener("click", loadMercury);
+  document.getElementById("venus-link").addEventListener("click", loadVenus);
+  //document.getElementById("earth-link").addEventListener("click", loadEarth);
   document.getElementById("mars-link").addEventListener("click", loadMars);
-  document.getElementById("earth-link").addEventListener("click", loadEarth);
-  document.getElementById("moon-link").addEventListener("click", loadMoon);
+  //document.getElementById("jupiter-link").addEventListener("click", loadJupiter);
+ // document.getElementById("saturn-link").addEventListener("click", loadSaturn);
+  //document.getElementById("uranus-link").addEventListener("click", loadUranus);
+ // document.getElementById("neptun-link").addEventListener("click", loadUranus);
+
 }
 
 function loadFunAndFacts(){
@@ -119,7 +130,7 @@ function loadMars() {
         <div class="col-md-6" id="mars-container" style="height: 80vh;">
         </div>
         <!-- Prawa strona: informacje o Marsie -->
-       <div class="col-md-3" id="mars-info">
+       <div class="col-md-3" id="planet-info">
       <h2>Informacje o Marsie</h2>
       <p>Mars jest czwartą planetą od Słońca...</p>
     </div>
@@ -129,16 +140,58 @@ function loadMars() {
   const container = document.getElementById('mars-container');
   console.log("Wymiary mars-container:", container.clientWidth, container.clientHeight);
 
-  // Załaduj skrypt Three.js z animacją Marsa
- // const script = document.createElement("script");
- // script.type = "module";
- // script.src = "./planets/Mars/mars.js";  // Ścieżka do pliku Mars.js
- // document.body.appendChild(script);
-
  // Inicjalizuj scenę Marsa
  initializeMarsScene(container);
 }
 
+function loadMercury() {
+  disposeMercuryScene();
+
+  const content = document.getElementById("content");
+
+ content.innerHTML = `
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6" id="mercury-container" style="height: 80vh;">
+        </div>
+
+       <div class="col-md-3" id="planet-info">
+      <h2>Informacje o Mercury</h2>
+      <p>Mercury jest 1 planetą od Słońca...</p>
+    </div>
+      </div>
+    </div>
+  `;
+  const container = document.getElementById('mercury-container');
+  console.log("Wymiary mercury-container:", container.clientWidth, container.clientHeight);
+
+ // Inicjalizuj scenę
+ initializeMercuryScene(container);
+}
+function loadVenus() {
+  disposeVenusScene();
+
+  const content = document.getElementById("content");
+
+ content.innerHTML = `
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6" id="venus-container" style="height: 80vh;">
+        </div>
+
+       <div class="col-md-3" id="planet-info">
+      <h2>Informacje o Venus</h2>
+      <p>Wenus jest 2 planetą od Słońca...</p>
+    </div>
+      </div>
+    </div>
+  `;
+  const container = document.getElementById('venus-container');
+  console.log("Wymiary venus-container:", container.clientWidth, container.clientHeight);
+
+ // Inicjalizuj scenę
+ initializeVenusScene(container);
+}
 
 function loadEarth() {
   const content = document.getElementById("content");
@@ -149,14 +202,7 @@ function loadEarth() {
   document.body.appendChild(script);
 }
 
-function loadMoon() {
-  const content = document.getElementById("content");
-  content.innerHTML = '<div id="moon-container" style="width: 60%; padding-top: 60%; position: relative;"></div>';
-  const script = document.createElement("script");
-  script.type = "module";
-  script.src = "../planets/Earth/Moon/moon.js"; // Ścieżka do pliku Księżyca
-  document.body.appendChild(script);
-}
+
 function setActiveLink(activeId) {
   const links = document.querySelectorAll(".navbar a");
   links.forEach(link => {
