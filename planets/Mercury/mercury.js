@@ -29,7 +29,7 @@ const spaceHorizonDistance = 500000;
 const ambientLightPower = 5;
 const rotationAngle = -180;
 const mercuryTexturePath = "../../assets/textures/mercury/16k_mercury_texture.jpg";
-const mercuryBumpMapPath = "../../assets/textures/mercury/16k_mercury_texture_NRM.jpg";
+const mercuryBumpMapPath = "../../assets/textures/mercury/mercury_bump3.jpg";
 
 let raycaster = new THREE.Raycaster();
 

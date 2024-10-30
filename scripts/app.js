@@ -4,6 +4,8 @@ import { loadFooter } from '../src/components/layout/footer.js';
 import { initializeMarsScene, disposeMarsScene } from '../planets/Mars/mars.js';
 import { initializeMercuryScene, disposeMercuryScene } from '../planets/Mercury/mercury.js';
 import { initializeVenusScene, disposeVenusScene } from '../planets/Venus/venus.js';
+import { initializeEarthScene, disposeEarthScene } from '../planets/Earth/earth.js';
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -24,8 +26,8 @@ function disposeCurrentScene() {
   disposeMarsScene();
   disposeMercuryScene();
   disposeVenusScene();
-  // disposeEarthScene();
-  // disposeMoonScene();
+  disposeEarthScene();
+ 
 }
 
 function loadHome() {
@@ -92,7 +94,7 @@ function loadLibrary() {
   //document.getElementById("sun-link").addEventListener("click", loadSun);
   document.getElementById("mercury-link").addEventListener("click", loadMercury);
   document.getElementById("venus-link").addEventListener("click", loadVenus);
-  //document.getElementById("earth-link").addEventListener("click", loadEarth);
+  document.getElementById("earth-link").addEventListener("click", loadEarth);
   document.getElementById("mars-link").addEventListener("click", loadMars);
   //document.getElementById("jupiter-link").addEventListener("click", loadJupiter);
  // document.getElementById("saturn-link").addEventListener("click", loadSaturn);
@@ -194,12 +196,26 @@ function loadVenus() {
 }
 
 function loadEarth() {
+  disposeEarthScene();
   const content = document.getElementById("content");
-  content.innerHTML = '<div id="mars-container" style="width: 60%; height: 60vh; position: relative; float: left;"></div>';
-  const script = document.createElement("script");
-  script.type = "module";
-  script.src = "../planets/Earth/earth.js"; // Ścieżka do pliku Ziemi
-  document.body.appendChild(script);
+
+  content.innerHTML = `
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6" id="earth-container" style="height: 80vh;">
+        </div>
+
+       <div class="col-md-3" id="planet-info">
+      <h2>Informacje o Ziemi</h2>
+      <p>Ziemia jest 3 planetą od Słońca...</p>
+    </div>
+      </div>
+    </div>
+  `;
+
+  const container = document.getElementById('earth-container');
+  console.log("Wymiary earth-container:", container.clientWidth, container.clientHeight);
+  initializeEarthScene(container);
 }
 
 

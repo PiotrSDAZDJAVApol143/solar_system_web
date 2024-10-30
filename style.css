@@ -1,6 +1,12 @@
 /* Stylizacja paska nawigacji */
 body {
     background-color: rgb(24, 25, 27);
+    background-image: url("assets/textures/8k_stars_milky_way.jpg") ;
+    background-size: cover;
+    /* Rozciąga obraz na całą powierzchnię */
+    background-repeat: no-repeat;
+    /* Zapobiega powtarzaniu obrazka */
+   
 }
 body, html {
     margin: 0;
@@ -107,6 +113,13 @@ ul {
     box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); 
 }
 #venus-container {
+    width: 60%;              
+    height: 60vh;            
+    position: relative;      
+    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); 
+}
+
+#earth-container {
     width: 60%;              
     height: 60vh;            
     position: relative;      
