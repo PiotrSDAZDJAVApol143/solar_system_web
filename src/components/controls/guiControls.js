@@ -1,7 +1,7 @@
 // guiControls.js
 import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.17.0/dist/lil-gui.esm.min.js';
 
-export function initializeGUI(guiParams, toggleObjectNames, additionalControlsCallback) {
+export function initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCamera) {
     const gui = new GUI();
 
     // Przełącznik dla nazw obiektów
@@ -11,10 +11,22 @@ export function initializeGUI(guiParams, toggleObjectNames, additionalControlsCa
            toggleObjectNames(value);
        });
 
-    // Jeśli istnieje dodatkowa funkcja do dodania kontrolerów
-    if (additionalControlsCallback) {
-        additionalControlsCallback(gui);
-    }
+    // Przełącznik dla ogonów orbity
+    gui.add(guiParams, 'showOrbitTails')
+       .name('Pokaż ogony orbity')
+       .onChange((value) => {
+           orbitTails.forEach(tail => {
+               if (value) {
+                   tail.show();
+               } else {
+                   tail.hide();
+                   tail.tailPoints = []; // Opcjonalnie wyczyść ogon
+               }
+           });
+       });
+
+    // Przycisk do zatrzymania śledzenia
+    gui.add({ stopFollowing: resetCamera }, 'stopFollowing').name('Zatrzymaj śledzenie');
 
     // Ustawienie pozycji GUI w górnym lewym rogu
     gui.domElement.style.position = 'absolute';

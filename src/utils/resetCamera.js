@@ -1,11 +1,10 @@
 // resetCamera.js
-
 import * as TWEEN from 'tweenjs';
 
-export function resetCamera(camera, controls, state, initialSettings) {
-    isTweening = true;
-    isFollowingObject = false;
-    currentTargetObject = null;
+export function resetCamera(camera, controls, state, initialCameraPosition, initialControlsTarget, initialMinDistance, initialMaxDistance) {
+    state.isTweening = true;
+    state.isFollowingObject = false;
+    state.currentTargetObject = null;
 
     const from = {
         x: camera.position.x,
@@ -13,7 +12,7 @@ export function resetCamera(camera, controls, state, initialSettings) {
         z: camera.position.z,
         tx: controls.target.x,
         ty: controls.target.y,
-        tz: controls.target.z
+        tz: controls.target.z,
     };
 
     const to = {
@@ -22,7 +21,7 @@ export function resetCamera(camera, controls, state, initialSettings) {
         z: initialCameraPosition.z,
         tx: initialControlsTarget.x,
         ty: initialControlsTarget.y,
-        tz: initialControlsTarget.z
+        tz: initialControlsTarget.z,
     };
 
     controls.minDistance = initialMinDistance;
@@ -32,7 +31,7 @@ export function resetCamera(camera, controls, state, initialSettings) {
     controls.enablePan = true;
 
     const tween = new TWEEN.Tween(from)
-        .to(to, 2000) // Możesz dostosować czas animacji
+        .to(to, 2000) 
         .easing(TWEEN.Easing.Quadratic.InOut)
         .onUpdate(() => {
             camera.position.set(from.x, from.y, from.z);
@@ -40,7 +39,7 @@ export function resetCamera(camera, controls, state, initialSettings) {
             controls.update();
         })
         .onComplete(() => {
-            isTweening = false;
+            state.isTweening = false;
             controls.update();
         })
         .start();

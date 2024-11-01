@@ -55,6 +55,9 @@ const ambientLightPower = 3;
 const rotationAngle = 260;
 const phobosRadius = 0.017;
 const deimosRadius = 0.0097;
+const marsTexturePath = "../../assets/textures/mars/8k_mars.jpg";
+const displacementMapPath = "../../assets/textures/mars/8k_mars_DISP.png";
+const marsBumpMapPath = "../../assets/textures/mars/8k_mars_NRM.jpg";
 
 
 // Parametry GUI
@@ -109,7 +112,7 @@ export function initializeMarsScene(containerElement) {
     scene.add(marsPlanet);
 
     // Tworzenie planety Mars
-    marsMesh = createPlanet(planetRadius, "../../assets/textures/mars/8k_mars.jpg", 5);
+    marsMesh = createPlanet(planetRadius, marsTexturePath, 5, marsBumpMapPath, 2, displacementMapPath, 0.05);
     marsMesh.receiveShadow = true;
     marsPlanet.add(marsMesh);
     occlusionObjects.push(marsMesh);
@@ -221,25 +224,8 @@ export function initializeMarsScene(containerElement) {
         orbitTails.push(deimosOrbitTail);
     });
 
-    // Inicjalizacja GUI z dodatkowym przełącznikiem dla ogonów orbity
-    gui = initializeGUI(guiParams, toggleObjectNames);
+    gui = initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCamera);
     container.appendChild(gui.domElement);
-
-    // Dodanie przełącznika do GUI dla ogonów orbity
-    gui.add(guiParams, 'showOrbitTails')
-        .name('Pokaż ogony orbity')
-        .onChange((value) => {
-            orbitTails.forEach(tail => {
-                if (value) {
-                    tail.show();
-                } else {
-                    tail.hide();
-                    tail.tailPoints = []; // Opcjonalnie wyczyść ogon
-                }
-            });
-        });
-
-    gui.add({ stopFollowing: resetCamera }, 'stopFollowing').name('Zatrzymaj śledzenie');
 
     // Dodanie nasłuchiwacza zmiany rozmiaru okna
     onWindowResize = function () {
@@ -372,7 +358,7 @@ function animate() {
         }
     }
 
-    console.log("Animacja działa");
+
 }
 
 function toggleObjectNames(show) {
@@ -516,6 +502,4 @@ function resetCamera() {
         })
         .start();
 }
-
-console.log("mars.js załadowany!");
 export { focusOnObject };
