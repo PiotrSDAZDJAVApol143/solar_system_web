@@ -26,8 +26,8 @@ export function focusOnObject(object, camera, controls, state) {
         console.log("obiekt mały")
         // Dla obiektów o średnicy mniejszej lub równej 0.5
         cameraMinDistance = diameter * 1.5; // Używane do pozycjonowania kamery
-        controlsMinDistance = cameraMinDistance * 1;
-        controlsMaxDistance = cameraMinDistance * 20;
+        controlsMinDistance = cameraMinDistance * 10;
+        controlsMaxDistance = cameraMinDistance * 30;
     }
 
     controls.minDistance = controlsMinDistance;
