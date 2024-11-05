@@ -39,18 +39,15 @@ export function updateLabelVisibility(labelObject, targetObject, camera, raycast
     // Ustaw raycaster
     raycaster.set(camera.position, targetPosition.clone().sub(camera.position).normalize());
 
+    let filteredOcclusionObjects = occlusionObjects.filter(obj => obj !== targetObject);
+
     // Sprawdź przecięcia
-    let intersects = raycaster.intersectObjects(occlusionObjects, true);
+    let intersects = raycaster.intersectObjects(filteredOcclusionObjects, true);
 
     if (intersects.length > 0) {
-        // Jeśli pierwszy przecięty obiekt to nasz cel, pokaż etykietę
-        if (isDescendant(targetObject, intersects[0].object)) {
-            labelObject.visible = true;
-        } else {
-            labelObject.visible = false;
-        }
-    } else {
         labelObject.visible = false;
+    } else {
+        labelObject.visible = true;
     }
 }
 
