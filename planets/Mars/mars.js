@@ -64,8 +64,8 @@ const moonsData = [
     {
         name: 'Phobos',
         radius: 0.0176,
-        modelPath: '../../assets/textures/3D_models/24878_Phobos_1_1000.glb',
-        scale: 0.0176,
+        modelPath: '../../assets/textures/3D_models/Fobos.glb',
+        scale: 0.0352,
         orbitDuration: 9.5,
         rotationDuration: 9.5,
         distance: 14.7,
@@ -76,8 +76,8 @@ const moonsData = [
     {
         name: 'Deimos',
         radius: 0.0097,
-        modelPath: '../../assets/textures/3D_models/24879_Deimos_1_1000.glb',
-        scale: 0.0097,
+        modelPath: '../../assets/textures/3D_models/Deimos.glb',
+        scale: 0.0194,
         orbitDuration: 37.9,
         rotationDuration: 37.9,
         distance: 36.8,
@@ -89,7 +89,10 @@ const moonsData = [
 
 let guiParams = {
     showObjectNames: false,
-    showOrbitTails: false, // Przełącznik dla ogonów orbity
+    showSmallMoons: false,
+    showMediumMoons: false,
+    showLargeMoons: false,
+    showOrbitTails: false,
 };
 
 let raycaster = new THREE.Raycaster();
@@ -176,7 +179,7 @@ export function initializeMarsScene(containerElement) {
         moons.push(moon);
     }
 
-    gui = initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCameraCallback);
+    gui = initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCameraCallback, container);
     container.appendChild(gui.domElement);
 
     // Dodanie nasłuchiwacza zmiany rozmiaru okna
@@ -271,7 +274,20 @@ function animate() {
 
 function toggleObjectNames(show) {
     for (const moon of moons) {
-        if (moon.label) moon.label.visible = show;
+        if (moon.label) {
+            const radius = moon.radius;
+
+            let shouldShow = false;
+            if (radius <= 0.008 && guiParams.showSmallMoons) {
+                shouldShow = true;
+            } else if (radius > 0.008 && radius < 0.25 && guiParams.showMediumMoons) {
+                shouldShow = true;
+            } else if (radius >= 0.25 && guiParams.showLargeMoons) {
+                shouldShow = true;
+            }
+
+            moon.label.userData.shouldShow = guiParams.showObjectNames && shouldShow;
+        }
     }
 }
 

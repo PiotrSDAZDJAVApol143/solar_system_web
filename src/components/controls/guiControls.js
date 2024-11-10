@@ -4,12 +4,31 @@ import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.17.0/dist/lil-gui.esm.mi
 export function initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCamera, container) {
     const gui = new GUI();
 
-    // Przełącznik dla nazw obiektów
-    gui.add(guiParams, 'showObjectNames')
-       .name('Pokaż nazwy obiektów')
-       .onChange((value) => {
-           toggleObjectNames(value);
-       });
+    const namesFolder = gui.addFolder('Nazwy obiektów');
+    namesFolder.add(guiParams, 'showObjectNames')
+        .name('Pokaż nazwy')
+        .onChange(() => {
+            toggleObjectNames();
+        });
+        namesFolder.add(guiParams, 'showSmallMoons')
+        .name('Pokaż małe księżyce')
+        .onChange(() => {
+            toggleObjectNames();
+        });
+
+    namesFolder.add(guiParams, 'showMediumMoons')
+        .name('Pokaż średnie księżyce')
+        .onChange(() => {
+            toggleObjectNames();
+        });
+
+    namesFolder.add(guiParams, 'showLargeMoons')
+        .name('Pokaż duże księżyce')
+        .onChange(() => {
+            toggleObjectNames();
+        });
+
+    namesFolder.open();
 
     // Przełącznik dla ogonów orbity
     gui.add(guiParams, 'showOrbitTails')

@@ -1,3 +1,4 @@
+//moon.js
 import * as THREE from 'three';
 import { createPlanet } from './createPlanet.js';
 import { createLabel, updateLabelVisibility } from '../utils/labelUtils.js';
@@ -154,6 +155,9 @@ export class Moon {
         // Rotacja księżyca wokół własnej osi
         if (this.mesh) {
             this.mesh.rotation.y += (2 * Math.PI) / (this.rotationDuration * 60) * deltaTime;
+            this.mesh.rotation.x += (2 * Math.PI) / (this.rotationDuration * 580) * deltaTime;
+            this.mesh.rotation.z += (2 * Math.PI) / (this.rotationDuration * 880) * deltaTime;
+
         }
 
         // Aktualizacja orbity księżyca
@@ -163,7 +167,7 @@ export class Moon {
 
         // Aktualizacja widoczności etykiety
         if (this.mesh && this.label) {
-            updateLabelVisibility(this.label, this.mesh, this.camera, this.raycaster, this.occlusionObjects, this.guiParams);
+            updateLabelVisibility(this.label, this.mesh, this.camera, this.raycaster, this.occlusionObjects);
         }
 
         // Aktualizacja ogona orbity

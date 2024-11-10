@@ -8,13 +8,13 @@ import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
 import getStarfield from '../../src/scenes/getStarfield.js';
 import { handleWindowResize } from '../../src/scenes/handleWindowResize.js';
 import { disposeScene } from '../../src/utils/disposeScene.js';
-import { loader } from '../../src/models/createPlanet.js';
 import { initializeGUI } from '../../src/components/controls/guiControls.js';
 import { initializeLabelRenderer } from '../../src/utils/labelUtils.js';
 import { focusOnObject } from '../../src/utils/focusOnObject.js';
 import { resetCamera } from '../../src/utils/resetCamera.js';
-import { Moon } from '../../src/models/moon.js'; // Import klasy Moon
-import { setMeshProperties } from '../../src/utils/planetUtils.js'; // Import funkcji pomocniczej
+import { Moon } from '../../src/models/moon.js'; 
+import { setMeshProperties } from '../../src/utils/planetUtils.js';
+import { createPlanetRings } from '../../src/models/createPlanetRings.js';
 
 // Zmienne globalne dla modułu
 let scene, camera, renderer, controls, container, animateId;
@@ -59,12 +59,11 @@ const moonsData = [
         name: 'Metis',
         radius: 0.0345,
         modelPath: "../../assets/textures/3D_models/Metis.glb",
-        texturePath: "../../assets/textures/jupiter/Metis.jpg",
-        scale: 0.034,
+        scale: 0.068,
         orbitDuration: 8.8,
         rotationDuration: 8.8,
         distance: 201,
-        orbitTilt: 0,
+        orbitTilt: 0.02,
         rotationTilt: 0,
         isGLTF: true, 
         isPLY: false,
@@ -79,6 +78,19 @@ const moonsData = [
         rotationDuration: 8.8,
         distance: 202.5,
         orbitTilt: 0.05,
+        rotationTilt: 0.002,
+        isGLTF: true, 
+        isPLY: false,
+    },
+    {
+        name: 'Amaltea',
+        radius: 0.131,
+        modelPath: "../../assets/textures/3D_models/Amaltea.glb",
+        scale: 0.262,
+        orbitDuration: 12,
+        rotationDuration: 12,
+        distance: 284,
+        orbitTilt: 0.38,
         rotationTilt: 0.002,
         isGLTF: true, 
         isPLY: false,
@@ -135,7 +147,11 @@ const moonsData = [
 
 let guiParams = {
     showObjectNames: false,
-    showOrbitTails: false, // Przełącznik dla ogonów orbity
+    showSmallMoons: false,
+    showMediumMoons: false,
+    showLargeMoons: false,
+    showOrbitTails: false,
+
 };
 
 let raycaster = new THREE.Raycaster();
@@ -177,6 +193,45 @@ export function initializeJupiterScene(containerElement) {
 
     // Przypisanie promienia do userData
     setMeshProperties(jupiterMesh, "Jupiter", planetRadius);
+
+     // Tworzenie pierścieni Jowisza
+     const ringParamsList = [
+        {
+        innerRadius: planetRadius * 1.02,
+        outerRadius: planetRadius * 1.29,
+        texturePath: '../../assets/textures/saturn/ring.jpg',
+        opacity: 0.04,
+        repeatsAroundRing: 5,
+    },
+    {
+        innerRadius: planetRadius * 1.3,
+        outerRadius: planetRadius * 1.7,
+        texturePath: '../../assets/textures/saturn/ring.jpg',
+        opacity: 0.82,
+        repeatsAroundRing: 1,
+    },
+    {
+        innerRadius: planetRadius * 1.71,
+        outerRadius: planetRadius * 2.1,
+        texturePath: '../../assets/textures/saturn/ring.jpg',
+        opacity: 0.07,
+        repeatsAroundRing: 5,
+    },
+    {
+        innerRadius: planetRadius * 2.2,
+        outerRadius: planetRadius * 3.5,
+        texturePath: '../../assets/textures/saturn/ring.jpg',
+        opacity: 0.03,
+        repeatsAroundRing: 5,
+    },
+
+
+];
+    ringParamsList.forEach(params => {
+    const ring = createPlanetRings(params);
+    jupiterPlanet.add(ring);
+    //occlusionObjects.push(ring); // Opcjonalnie
+});
 
     createSpaceHorizon(scene, spaceHorizonDistance);
     const sunResult = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
@@ -306,9 +361,22 @@ function animate() {
     labelRenderer.render(scene, camera);
 }
 
-function toggleObjectNames(show) {
+function toggleObjectNames() {
     for (const moon of moons) {
-        if (moon.label) moon.label.visible = show;
+        if (moon.label) {
+            const radius = moon.radius;
+
+            let shouldShow = false;
+            if (radius <= 0.008 && guiParams.showSmallMoons) {
+                shouldShow = true;
+            } else if (radius > 0.008 && radius < 0.25 && guiParams.showMediumMoons) {
+                shouldShow = true;
+            } else if (radius >= 0.25 && guiParams.showLargeMoons) {
+                shouldShow = true;
+            }
+
+            moon.label.userData.shouldShow = guiParams.showObjectNames && shouldShow;
+        }
     }
 }
 

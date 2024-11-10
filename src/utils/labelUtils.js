@@ -27,8 +27,8 @@ export function createLabel(text) {
     return labelObject;
 }
 
-export function updateLabelVisibility(labelObject, targetObject, camera, raycaster, occlusionObjects, guiParams) {
-    if (!guiParams.showObjectNames) {
+export function updateLabelVisibility(labelObject, targetObject, camera, raycaster, occlusionObjects) {
+    if (!labelObject.userData.shouldShow) {
         labelObject.visible = false;
         return;
     }
