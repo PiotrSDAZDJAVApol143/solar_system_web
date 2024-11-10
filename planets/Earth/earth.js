@@ -1,4 +1,4 @@
-//earth.js
+// earth.js
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169/build/three.module.js';
 import * as TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js';
@@ -12,15 +12,17 @@ import { disposeScene } from '../../src/utils/disposeScene.js';
 import { loader } from '../../src/models/createPlanet.js';
 import { getFresnelMat } from "../../src/utils/getFresnelMat.js";
 import { initializeGUI } from '../../src/components/controls/guiControls.js';
-import { initializeLabelRenderer, createLabel, updateLabelVisibility } from '../../src/utils/labelUtils.js';
-import { OrbitTail } from '../../src/utils/orbitTail.js';
+import { initializeLabelRenderer } from '../../src/utils/labelUtils.js';
+//import { OrbitTail } from '../../src/utils/orbitTail.js';
 import { focusOnObject } from '../../src/utils/focusOnObject.js';
 import { resetCamera } from '../../src/utils/resetCamera.js';
+import { Moon } from '../../src/models/moon.js'; // Import klasy Moon
+import { setMeshProperties } from '../../src/utils/planetUtils.js'; // Import funkcji pomocniczej
 
 // Zmienne globalne dla modułu
 let scene, camera, renderer, controls, container, animateId;
-let earthPlanet, moonPivot;
-let earthMesh, cloudsMesh, earthAtNight, glowMesh, moonMesh, moonLabel;
+let earthPlanet;
+let earthMesh, cloudsMesh, earthAtNight, glowMesh;
 let sunMesh, sunLight, sunPivot, ambientLight;
 let labelRenderer;
 let onWindowResize;
@@ -40,38 +42,39 @@ let state = {
 
 let occlusionObjects = [];
 let orbitTails = [];
+let moons = []; // Tablica do przechowywania księżyców
 
 const planetRadius = 10;
 const axialTilt = -23.4;
 const cameraPosition = planetRadius * 2;
 const flarePower = 350;
 const earthDay = 30;  // Pełny obrót Ziemi w 30 sekund
-const moonOrbitDuration = 819.6;  // Pełna orbita Księżyca w 819,6 sekund (27,32 dni)
 const sunOrbitDuration = 10957.5;  // Pełna orbita Słońca w 10957,5 sekund (365,25 dni)
 const sunRadius = 1093;
 const sunDistance = 234800;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 3.5;
 const rotationAngle = 60;
-const moonRadius = 2.73;
-const moonDistance = 603;
 const earthTexturePath = "../../assets/textures/earth/8k_earth_daymap.jpg";
 const earthNightTexturePath = "../../assets/textures/earth/8k_earth_nightmap.jpg";
 const earthBumpMapPath = "../../assets/textures/earth/earthbump10k.jpg";
 const earthCloudTexturePath = "../../assets/textures/earth/clouds_8k.jpg";
-const moonTexturePath = "../../assets/textures/earth/Moon/8k_moon.jpg";
 
-const resetCameraCallback = () => resetCamera(
-    camera,
-    controls,
-    state,
-    initialCameraPosition,
-    initialControlsTarget,
-    initialMinDistance,
-    initialMaxDistance
-);
+// Dane księżyców
+const moonsData = [
+    {
+        name: 'Moon',
+        radius: 2.73,
+        texturePath: "../../assets/textures/earth/Moon/8k_moon.jpg",
+        orbitDuration: 819.6,
+        rotationDuration: 819.6,
+        distance: 603,
+        orbitTilt: 5.145,
+        rotationTilt: 1.54,
+        isGLTF: false, // Jeśli księżyc jest w formacie GLTF, ustaw na true
+    },
+];
 
-// Parametry GUI
 let guiParams = {
     showObjectNames: false,
     showOrbitTails: false, // Przełącznik dla ogonów orbity
@@ -85,6 +88,7 @@ export function initializeEarthScene(containerElement) {
     if (scene) {
         disposeEarthScene();
     }
+
     raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 0;
 
@@ -109,7 +113,7 @@ export function initializeEarthScene(containerElement) {
     earthPlanet.rotation.z = axialTilt * Math.PI / 180;
     scene.add(earthPlanet);
 
-    earthMesh = createPlanet(planetRadius, earthTexturePath, 10, earthBumpMapPath, 5); //
+    earthMesh = createPlanet(planetRadius, earthTexturePath, 10, earthBumpMapPath, 5);
     earthMesh.receiveShadow = true;
     earthPlanet.add(earthMesh);
     occlusionObjects.push(earthMesh);
@@ -123,12 +127,12 @@ export function initializeEarthScene(containerElement) {
 
     const cloudsMat = new THREE.MeshStandardMaterial({
         map: loader.load(earthCloudTexturePath),
-        transparent: false,
-        opacity: 1.2,
+        transparent: true,
+        opacity: 0.5,
         blending: THREE.AdditiveBlending,
     });
 
-    cloudsMesh = new THREE.Mesh(earthMesh.geometry, cloudsMat); // Przypisanie do globalnej zmiennej
+    cloudsMesh = new THREE.Mesh(earthMesh.geometry, cloudsMat);
     cloudsMesh.scale.setScalar(1.015);
     earthPlanet.add(cloudsMesh);
 
@@ -138,8 +142,7 @@ export function initializeEarthScene(containerElement) {
     earthPlanet.add(glowMesh);
 
     // Przypisanie promienia do userData
-    earthMesh.userData.radius = planetRadius;
-    earthMesh.name = "Earth";
+    setMeshProperties(earthMesh, "Earth", planetRadius);
 
     createSpaceHorizon(scene, spaceHorizonDistance);
     const sunResult = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
@@ -148,7 +151,6 @@ export function initializeEarthScene(containerElement) {
     sunPivot = sunResult.sunPivot;
     ambientLight = sunResult.ambientLight;
 
-    // Gwiazdy
     const stars = getStarfield({ numStars: 500 });
     scene.add(stars);
 
@@ -159,36 +161,25 @@ export function initializeEarthScene(containerElement) {
 
     labelRenderer = initializeLabelRenderer(container);
 
-    moonPivot = new THREE.Object3D();  // Przegub dla orbity Księżyca
-    earthPlanet.add(moonPivot);  // Dodaj przegub do Ziemi
-    moonPivot.rotation.x = THREE.MathUtils.degToRad(5.145);
-    moonMesh = createPlanet(moonRadius, moonTexturePath, 15)
-    moonMesh.castShadow = true;
-    moonMesh.receiveShadow = true;
-    moonMesh.position.set(moonDistance, 0, 0);
-    moonMesh.rotation.z = THREE.MathUtils.degToRad(1.54);
-    moonPivot.add(moonMesh);
-    occlusionObjects.push(moonMesh);
+    // Inicjalizacja księżyców
+    for (const moonData of moonsData) {
+        moonData.parentPlanet = earthPlanet;
+        moonData.scene = scene;
+        moonData.camera = camera;
+        moonData.controls = controls;
+        moonData.state = state;
+        moonData.guiParams = guiParams;
+        moonData.occlusionObjects = occlusionObjects;
+        moonData.orbitTails = orbitTails;
+        moonData.labelRenderer = labelRenderer;
+        moonData.raycaster = raycaster;
+        moonData.updatePlanetInfo = updatePlanetInfo;
 
-    setMeshProperties(moonMesh, "Moon", moonRadius);
-    moonMesh.userData.radius = moonRadius;
-    moonMesh.name = "Moon";
+        const moon = new Moon(moonData);
+        moons.push(moon);
+    }
 
-    moonLabel = createLabel("Moon");
-    moonMesh.add(moonLabel);
-    moonLabel.visible = guiParams.showObjectNames;
-
-    moonLabel.element.addEventListener('click', (event) => {
-        event.stopPropagation();
-        focusOnObject(moonMesh, camera, controls, state);
-    });
-
-    const moonMaxPoints = calculateMaxPoints(moonOrbitDuration);
-    const moonOrbitTail = new OrbitTail(moonMesh, scene, moonMaxPoints, { color: 0xcccccc, opacity: 0.5 });
-    moonOrbitTail.hide();
-    orbitTails.push(moonOrbitTail);
-
-    gui = initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCameraCallback);
+    gui = initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCameraCallback, container);
     container.appendChild(gui.domElement);
 
     // Dodanie nasłuchiwacza zmiany rozmiaru okna
@@ -199,7 +190,6 @@ export function initializeEarthScene(containerElement) {
 
     renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
 
-    // Rozpoczęcie animacji
     animate();
 }
 
@@ -215,9 +205,9 @@ export function disposeEarthScene() {
         onWindowResize,
         occlusionObjects,
     });
-    // Usuwanie ogonów orbity
     orbitTails.forEach(tail => tail.dispose());
     orbitTails = [];
+    moons = [];
 
     // Resetuj zmienne
     scene = null;
@@ -230,9 +220,6 @@ export function disposeEarthScene() {
     onWindowResize = null;
     earthPlanet = null;
     earthMesh = null;
-    moonPivot = null;
-    moonMesh = null;
-    moonLabel = null;
     earthAtNight = null;
     cloudsMesh = null;
     glowMesh = null;
@@ -246,30 +233,28 @@ export function disposeEarthScene() {
 
 function animate() {
     animateId = requestAnimationFrame(animate);
-    controls.update();
+    //controls.update();
     TWEEN.update();
 
+    const deltaTime = 1; // Możesz użyć zegara, jeśli chcesz mieć dokładny deltaTime
+
     if (earthMesh) {
-        earthMesh.rotation.y += (2 * Math.PI) / (earthDay * 60);
+        earthMesh.rotation.y += (2 * Math.PI) / (earthDay * 60) * deltaTime;
     }
     if (earthAtNight) {
-        earthAtNight.rotation.y += (2 * Math.PI) / (earthDay * 60);
+        earthAtNight.rotation.y += (2 * Math.PI) / (earthDay * 60) * deltaTime;
     }
     if (glowMesh) {
-        glowMesh.rotation.y += (2 * Math.PI) / (earthDay * 50);
+        glowMesh.rotation.y += (2 * Math.PI) / (earthDay * 50) * deltaTime;
     }
     if (cloudsMesh) {
-        cloudsMesh.rotation.y += (2 * Math.PI) / (earthDay * 50);
-    }
-    if (moonMesh) {
-        moonMesh.rotation.y += (2 * Math.PI) / (moonOrbitDuration * 60); // Rotacja Księżyca
+        cloudsMesh.rotation.y += (2 * Math.PI) / (earthDay * 50) * deltaTime;
     }
 
-    if (moonPivot) {
-        moonPivot.rotation.y += (2 * Math.PI) / (moonOrbitDuration * 60); // Obrót dla orbity Księżyca
+    // Aktualizacja księżyców
+    for (const moon of moons) {
+        moon.update(deltaTime);
     }
-    renderer.render(scene, camera);
-    labelRenderer.render(scene, camera);
 
     // Aktualizacja pozycji kamery, jeśli śledzimy obiekt i nie jesteśmy w trakcie animacji
     if (state.currentTargetObject && !state.isTweening) {
@@ -288,48 +273,75 @@ function animate() {
         // Jeśli nie śledzimy obiektu, normalnie aktualizuj kontrole
         controls.update();
     }
+
     // Okrągła orbita Słońca (przeciwnie do wskazówek zegara)
-    const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2; // Obliczamy czas dla pełnej orbity w 10957,5 sekund
-    sunMesh.position.x = Math.cos(-time) * sunDistance;  // Ujemny czas dla odwrotnej orbity
+    const time = (Date.now() / 1000) / sunOrbitDuration * Math.PI * 2;
+    sunMesh.position.x = Math.cos(-time) * sunDistance;
     sunMesh.position.z = Math.sin(-time) * sunDistance;
     sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z);
-    //  renderer.render(scene, camera);
-    //  labelRenderer.render(scene, camera);
 
-    if (moonMesh) {
-        updateLabelVisibility(moonLabel, moonMesh, camera, raycaster, occlusionObjects, guiParams);
-    }
-    if (guiParams.showOrbitTails) {
-        if (moonMesh) {
-            orbitTails.forEach(tail => {
-                if (tail.moon === moonMesh) {
-                    tail.update();
-                }
-            });
-        }
-
-    }
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
 }
+
 function toggleObjectNames(show) {
-    if (moonLabel) moonLabel.visible = show;
-}
-function calculateMaxPoints(orbitDuration) {
-    return Math.round(0.6 * orbitDuration * 60);
+    for (const moon of moons) {
+        if (moon.label) moon.label.visible = show;
+    }
 }
 
 function onDocumentMouseDown(event) {
     event.preventDefault();
 
     if (state.isFollowingObject) return;
+
+    const rect = renderer.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const clickableObjects = moons.map(moon => moon.mesh);
+
+    const intersects = raycaster.intersectObjects(clickableObjects, true);
+
+    if (intersects.length > 0) {
+        const intersectedObject = intersects[0].object;
+
+        focusOnObject(intersectedObject, camera, controls, state);
+        updatePlanetInfo(intersectedObject.name);
+    }
 }
 
-function setMeshProperties(object, name, radius) {
-    object.name = name;
-    object.userData.radius = radius;
-    object.traverse(function (child) {
-        if (child.isMesh) {
-            child.name = name;
-            child.userData.radius = radius;
+function updatePlanetInfo(name) {
+    const planetInfoDiv = document.getElementById('planet-info');
+    if (planetInfoDiv) {
+        if (name === 'Moon') {
+            planetInfoDiv.innerHTML = `
+                <h2>Informacje o Księżycu</h2>
+                <p>Księżyc jest naturalnym satelitą Ziemi...</p>
+            `;
+        } else if (name === 'Earth') {
+            planetInfoDiv.innerHTML = `
+                <h2>Informacje o Ziemi</h2>
+                <p>Ziemia jest 3 planetą od Słońca...</p>
+            `;
         }
-    });
+    }
 }
+
+const resetCameraCallback = () => {
+    resetCamera(
+        camera,
+        controls,
+        state,
+        initialCameraPosition,
+        initialControlsTarget,
+        initialMinDistance,
+        initialMaxDistance
+    );
+
+    // Aktualizuj planet-info
+    updatePlanetInfo('Earth');
+};

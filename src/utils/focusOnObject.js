@@ -19,14 +19,14 @@ export function focusOnObject(object, camera, controls, state) {
     if (diameter > 0.5) {
         console.log("obiekt średni")
         // Dla obiektów o średnicy większej niż 0.5
-        cameraMinDistance = diameter * 1.2;
-        controlsMinDistance = cameraMinDistance;
-        controlsMaxDistance = cameraMinDistance * 5;
+        cameraMinDistance = diameter * 1.1;
+        controlsMinDistance = cameraMinDistance *0.8;
+        controlsMaxDistance = cameraMinDistance * 30;
     } else {
         console.log("obiekt mały")
         // Dla obiektów o średnicy mniejszej lub równej 0.5
-        cameraMinDistance = diameter * 1.5; // Używane do pozycjonowania kamery
-        controlsMinDistance = cameraMinDistance * 10;
+        cameraMinDistance = diameter * 1.2; // Używane do pozycjonowania kamery
+        controlsMinDistance = cameraMinDistance * 6;
         controlsMaxDistance = cameraMinDistance * 30;
     }
 
