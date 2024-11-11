@@ -155,8 +155,8 @@ export class Moon {
         // Rotacja księżyca wokół własnej osi
         if (this.mesh) {
             this.mesh.rotation.y += (2 * Math.PI) / (this.rotationDuration * 60) * deltaTime;
-            this.mesh.rotation.x += (2 * Math.PI) / (this.rotationDuration * 580) * deltaTime;
-            this.mesh.rotation.z += (2 * Math.PI) / (this.rotationDuration * 880) * deltaTime;
+            this.mesh.rotation.x += (2 * Math.PI) / (this.rotationDuration * 1000) * deltaTime;
+            this.mesh.rotation.z += (2 * Math.PI) / (this.rotationDuration * 1000) * deltaTime;
 
         }
 

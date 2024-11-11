@@ -3,42 +3,44 @@ body {
     background-color: rgb(24, 25, 27);
     background-image: url("assets/textures/8k_stars_milky_way.jpg");
     background-size: cover;
-    /* Rozciąga obraz na całą powierzchnię */
     background-repeat: no-repeat;
-    /* Zapobiega powtarzaniu obrazka */
-
 }
 
 body,
 html {
+
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    /* Ukryj poziomy pasek przewijania */
+}
+
+#starfield-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: none;
 }
 
 #content {
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 3vh;
-    /*  height: 100vh;  /* Sprawi, że kontener będzie zajmować całą wysokość ekranu */
+    position: relative;
+    z-index: 2;
+    background: transparent;
 }
-
 
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-sizing: border-box;
-    /* padding: 10px 10px; */
     padding: 0;
     font-family: montserrat;
     text-transform: uppercase;
     background-color: silver;
     box-shadow: 0 2px 5 px rgba(49, 47, 47, 0.3);
-
+    z-index: 3;
 }
 
 .navbar-links {
@@ -66,7 +68,6 @@ a:hover {
     border: none;
 }
 
-
 .navbar-brand .logo {
     height: 70px;
     filter: drop-shadow(10px 10px 10px #555);
@@ -82,29 +83,103 @@ a:hover {
 
 }
 
-.library_content_title {
-    font-family: "Rampart One", sans-serif;
-    font-weight: bold;
+.content-wrapper {
+    position: relative;
 }
 
-ul {
-    list-style-type: none;
-    padding-left: 0;
+.overlay-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
 }
 
-ul li {
-    padding: 10px;
+.overlay-text h1 {
+    font-family: Arial, sans-serif;
+    font-weight: 300;
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.66);
+    text-transform: uppercase;
+}
+
+.overlay-text p {
+    font-family: Arial, sans-serif;
+    font-weight: 100;
+    font-size: 1rem;
+    color: rgba(214, 199, 199, 0.66);
+}
+
+.content-wrapper.fade-in {
+    opacity: 0;
+    transition: opacity 1.5s ease-in;
+}
+
+.content-wrapper.fade-in.show {
+    opacity: 1;
+}
+
+.content-wrapper.fade-out {
+    opacity: 1;
+    transition: opacity 1.5s ease-out;
+}
+
+.content-wrapper.fade-out.fade {
+    opacity: 0;
+}
+
+.library-content-title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.container {
+    text-align: center;
+    color: #FFF;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+.library-title {
+    font-family: Arial, sans-serif;
+    font-weight: 300;
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.66);
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10%;
+    margin: 20px auto;
+    max-width: 80%;
+}
+
+.planet-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.5rem;
-}
-
-ul li a {
+    color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
-    color: blue;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    padding: 10% 10%;
+    transition: transform 0.3s, background-color 0.3s;
+    height: 15vh;
+    width: 100%;
 }
 
-ul li a:hover {
-    text-decoration: underline;
-    color: darkblue;
+.planet-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
 }
 
 .planet-container {
@@ -125,6 +200,7 @@ ul li a:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     float: right;
     margin-left: 20px;
+    margin-bottom:10px;
 }
 
 .label {

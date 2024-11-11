@@ -72,7 +72,6 @@ const moonsData = [
         name: 'Andrastea',
         radius: 0.0126,
         modelPath: "../../assets/textures/3D_models/Adrastea2.glb",
-        texturePath: "../../assets/textures/jupiter/Metis.jpg",
         scale: 0.024,
         orbitDuration: 8.9,
         rotationDuration: 8.8,
@@ -188,6 +187,7 @@ export function initializeJupiterScene(containerElement) {
 
     jupiterMesh = createPlanet(planetRadius, jupiterTexturePath, 5);
     jupiterMesh.receiveShadow = true;
+    jupiterMesh.castShadow = true;
     jupiterPlanet.add(jupiterMesh);
     occlusionObjects.push(jupiterMesh);
 
@@ -201,28 +201,27 @@ export function initializeJupiterScene(containerElement) {
         outerRadius: planetRadius * 1.29,
         texturePath: '../../assets/textures/saturn/ring.jpg',
         opacity: 0.04,
-        repeatsAroundRing: 5,
+       
     },
     {
         innerRadius: planetRadius * 1.3,
         outerRadius: planetRadius * 1.7,
         texturePath: '../../assets/textures/saturn/ring.jpg',
-        opacity: 0.82,
-        repeatsAroundRing: 1,
+        opacity: 0.06,
+    
     },
     {
         innerRadius: planetRadius * 1.71,
         outerRadius: planetRadius * 2.1,
         texturePath: '../../assets/textures/saturn/ring.jpg',
-        opacity: 0.07,
-        repeatsAroundRing: 5,
+        opacity: 0.04,
     },
     {
         innerRadius: planetRadius * 2.2,
         outerRadius: planetRadius * 3.5,
         texturePath: '../../assets/textures/saturn/ring.jpg',
         opacity: 0.03,
-        repeatsAroundRing: 5,
+    
     },
 
 
@@ -240,7 +239,7 @@ export function initializeJupiterScene(containerElement) {
     sunPivot = sunResult.sunPivot;
     ambientLight = sunResult.ambientLight;
 
-    const stars = getStarfield({ numStars: 500 });
+    const stars = getStarfield({ numStars: 1000 });
     scene.add(stars);
 
     controls.minDistance = planetRadius + planetRadius * 0.2;
@@ -259,7 +258,7 @@ export function initializeJupiterScene(containerElement) {
         moonData.state = state;
         moonData.guiParams = guiParams;
         moonData.occlusionObjects = occlusionObjects;
-        moonData.orbitTails = orbitTails;
+        moonData.orbitTails = orbitTails;  // sprawdz wersje
         moonData.labelRenderer = labelRenderer;
         moonData.raycaster = raycaster;
         moonData.updatePlanetInfo = updatePlanetInfo;
@@ -435,6 +434,3 @@ const resetCameraCallback = () => {
     // Aktualizuj planet-info
     updatePlanetInfo('Jupiter');
 };
-
-
-
