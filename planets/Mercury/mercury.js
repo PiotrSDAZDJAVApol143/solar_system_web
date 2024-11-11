@@ -1,17 +1,25 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
-import getStarfield from "../../src/scenes/getStarfield.js";
+//mercury.js
+
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169/build/three.module.js';
+import * as TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js';
 import { createSceneCameraAndRenderer } from '../../src/components/controls/createSceneCameraAndRenderer.js';
 import { createPlanet } from '../../src/models/createPlanet.js';
 import { addSunAndLight } from '../../src/animations/getLightSun.js';
 import { createSpaceHorizon } from '../../src/scenes/createSpaceHorizon.js';
+import getStarfield from '../../src/scenes/getStarfield.js';
+import { handleWindowResize } from '../../src/scenes/handleWindowResize.js';
+import { disposeScene } from '../../src/utils/disposeScene.js';
 
-// tablica zmiennych
-const container = document.getElementById('mercury-container');
-const w = window.innerWidth;
-const h = window.innerHeight;
+// Zmienne globalne dla modułu
+let scene, camera, renderer, controls, container, animateId;
+let mercuryPlanet, mercuryMesh;
+let sunMesh, sunLight, sunPivot, ambientLight;
+let onWindowResize;
+let occlusionObjects = [];
+
 const planetRadius = 3.83;
 const axialTilt = -0.034;
-const cameraPosition = planetRadius*2;
+const cameraPosition = planetRadius * 2;
 const flarePower = 900;
 const mercuryDay = 1765;
 const sunOrbitDuration = 2638;
@@ -20,33 +28,87 @@ const sunDistance = 90890;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 5;
 const rotationAngle = -180;
+const mercuryTexturePath = "../../assets/textures/mercury/16k_mercury_texture.jpg";
+const mercuryBumpMapPath = "../../assets/textures/mercury/mercury_bump3.jpg";
 
-const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
+let raycaster = new THREE.Raycaster();
 
-const mercuryPlanet = new THREE.Group();
-mercuryPlanet.rotation.z = axialTilt * Math.PI / 180;  // Nachylenie osi 
-scene.add(mercuryPlanet);
+export function initializeMercuryScene(containerElement) {
+    container = containerElement;
 
-//generator tworzenia planety
-const loader = new THREE.TextureLoader();
-const mercuryMesh = createPlanet(planetRadius, "../../assets/textures/mercury/8k_mercury.jpg", 5);
-mercuryPlanet.add(mercuryMesh);
+    if (scene) {
+        disposeMercuryScene();
+    }
 
-//horyzont kosmosu
-createSpaceHorizon(scene, spaceHorizonDistance);
+    const w = container.clientWidth;
+    const h = container.clientHeight;
 
-//Słońce
-const { sunMesh, sunLight, sunPivot, ambientLight} = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
+    const result = createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle);
+    scene = result.scene;
+    camera = result.camera;
+    renderer = result.renderer;
+    controls = result.controls;
 
-// Gwiazdy
-const stars = getStarfield({ numStars: 500 });
-scene.add(stars);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-// Animacja
+    mercuryPlanet = new THREE.Group();
+    mercuryPlanet.rotation.z = axialTilt * Math.PI / 180;
+    scene.add(mercuryPlanet);
+
+    mercuryMesh = createPlanet(planetRadius, mercuryTexturePath, 5, mercuryBumpMapPath, 1 ); //
+    mercuryMesh.receiveShadow = true;
+    mercuryPlanet.add(mercuryMesh);
+
+    createSpaceHorizon(scene, spaceHorizonDistance);
+    const sunResult = addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambientLightPower);
+    sunMesh = sunResult.sunMesh;
+    sunLight = sunResult.sunLight;
+    sunPivot = sunResult.sunPivot;
+    ambientLight = sunResult.ambientLight;
+
+    // Gwiazdy
+    const stars = getStarfield({ numStars: 500 });
+    scene.add(stars);
+
+    window.addEventListener('resize', handleWindowResize, false);
+
+    animate();
+}
+
+export function disposeMercuryScene() {
+    disposeScene({
+        scene,
+        renderer,
+        controls,
+        animateId,
+        container,
+        onWindowResize,
+        occlusionObjects,
+    });
+
+    // Resetuj zmienne
+    scene = null;
+    renderer = null;
+    controls = null;
+    animateId = null;
+    container = null;
+    onWindowResize = null;
+    mercuryPlanet = null;
+    mercuryMesh = null;
+    sunMesh = null;
+    sunLight = null;
+    sunPivot = null;
+    ambientLight = null;
+    raycaster = null;
+    occlusionObjects = [];
+}
+
 function animate() {
-    requestAnimationFrame(animate);
+    animateId = requestAnimationFrame(animate);
+    controls.update();
+    TWEEN.update();
 
-    // Rotacja Planety
     mercuryMesh.rotation.y += (2 * Math.PI) / (mercuryDay * 60);
 
     // Okrągła orbita Słońca (przeciwnie do wskazówek zegara)
@@ -57,12 +119,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-animate();
-
-// Obsługa zmiany rozmiaru okna
-function handleWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+function onDocumentMouseDown(event) {
+    event.preventDefault();
 }
-window.addEventListener('resize', handleWindowResize, false);

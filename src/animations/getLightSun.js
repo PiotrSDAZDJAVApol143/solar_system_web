@@ -21,7 +21,7 @@ export function addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambien
     scene.add(sunLight);
 
     // Słońce
-    const sunTexture = loader.load("../../assets/textures/stars/8k_sun.jpg");
+    const sunTexture = loader.load("./assets/textures/stars/8k_sun.jpg");
     const sunGeo = new THREE.SphereGeometry(sunRadius, 32, 32);
     const sunMat = new THREE.MeshBasicMaterial({ map: sunTexture });
     const sunMesh = new THREE.Mesh(sunGeo, sunMat);
@@ -29,7 +29,7 @@ export function addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambien
     scene.add(sunMesh);
 
     // Rozbłysk
-    const flareTexture = loader.load('../../assets/textures/stars/lensflare0.png');
+    const flareTexture = loader.load('./assets/textures/stars/lensflare0.png');
     const lensflare = new Lensflare();
     lensflare.addElement(new LensflareElement(flareTexture, flarePower, 0));
     sunMesh.add(lensflare);

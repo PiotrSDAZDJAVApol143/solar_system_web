@@ -17,13 +17,18 @@ export function createLabel(text) {
     div.className = 'label';
     div.textContent = text;
     div.style.marginTop = '-1em';
+    div.style.pointerEvents = 'auto';
+    div.style.cursor = 'pointer';
+
+
+
     const labelObject = new CSS2DObject(div);
     labelObject.position.set(0, 0, 0);
     return labelObject;
 }
 
-export function updateLabelVisibility(labelObject, targetObject, camera, raycaster, occlusionObjects, guiParams) {
-    if (!guiParams.showObjectNames) {
+export function updateLabelVisibility(labelObject, targetObject, camera, raycaster, occlusionObjects) {
+    if (!labelObject.userData.shouldShow) {
         labelObject.visible = false;
         return;
     }
@@ -34,18 +39,15 @@ export function updateLabelVisibility(labelObject, targetObject, camera, raycast
     // Ustaw raycaster
     raycaster.set(camera.position, targetPosition.clone().sub(camera.position).normalize());
 
+    let filteredOcclusionObjects = occlusionObjects.filter(obj => obj !== targetObject);
+
     // Sprawdź przecięcia
-    let intersects = raycaster.intersectObjects(occlusionObjects, true);
+    let intersects = raycaster.intersectObjects(filteredOcclusionObjects, true);
 
     if (intersects.length > 0) {
-        // Jeśli pierwszy przecięty obiekt to nasz cel, pokaż etykietę
-        if (isDescendant(targetObject, intersects[0].object)) {
-            labelObject.visible = true;
-        } else {
-            labelObject.visible = false;
-        }
-    } else {
         labelObject.visible = false;
+    } else {
+        labelObject.visible = true;
     }
 }
 

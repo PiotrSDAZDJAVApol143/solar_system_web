@@ -1,11 +1,20 @@
 /* Stylizacja paska nawigacji */
 body {
     background-color: rgb(24, 25, 27);
+    background-image: url("assets/textures/8k_stars_milky_way.jpg");
+    background-size: cover;
+    /* Rozciąga obraz na całą powierzchnię */
+    background-repeat: no-repeat;
+    /* Zapobiega powtarzaniu obrazka */
+
 }
-body, html {
+
+body,
+html {
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* Ukryj poziomy pasek przewijania */
+    overflow-x: hidden;
+    /* Ukryj poziomy pasek przewijania */
 }
 
 #content {
@@ -14,7 +23,7 @@ body, html {
     align-items: center;
     justify-content: center;
     margin-top: 3vh;
-  /*  height: 100vh;  /* Sprawi, że kontener będzie zajmować całą wysokość ekranu */
+    /*  height: 100vh;  /* Sprawi, że kontener będzie zajmować całą wysokość ekranu */
 }
 
 
@@ -45,7 +54,9 @@ body, html {
     padding: 10px 10px;
     border-radius: 5px;
 }
-.navbar a.active, a:hover{
+
+.navbar a.active,
+a:hover {
     background: rgba(87, 90, 95, 0.834);
 }
 
@@ -68,8 +79,9 @@ body, html {
     color: black;
     margin-left: 5px;
     font-style: normal;
- 
+
 }
+
 .library_content_title {
     font-family: "Rampart One", sans-serif;
     font-weight: bold;
@@ -78,43 +90,49 @@ body, html {
 ul {
     list-style-type: none;
     padding-left: 0;
-  }
-  
-  ul li {
+}
+
+ul li {
     padding: 10px;
     font-size: 1.5rem;
-  }
-  
-  ul li a {
+}
+
+ul li a {
     text-decoration: none;
     color: blue;
-  }
-  
-  ul li a:hover {
+}
+
+ul li a:hover {
     text-decoration: underline;
     color: darkblue;
-  }
-  #mars-container {
-    width: 60%;              
-    height: 60vh;            
-    position: relative;      
-    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56); 
 }
-#mars-info {
-    width: 38%;                
-    height: auto;              
-    background-color: #191b1e9f; 
-    padding: 20px;             
+
+.planet-container {
+    width: 60%;
+    height: 60vh;
+    position: relative;
+    box-shadow: 0 0 50px rgba(10, 10, 10, 0.56);
+}
+
+#planet-info {
+    width: 38%;
+    height: auto;
+    background-color: #191b1e9f;
+    padding: 20px;
     color: #dcdcdc;
-    border-radius: 15px;       
-    border: 2px solid #ddd;    
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
-    float: right;             
-    margin-left: 20px;      
+    border-radius: 15px;
+    border: 2px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    float: right;
+    margin-left: 20px;
 }
+
 .label {
     color: rgba(131, 125, 125, 0.742);
     font-family: Arial, sans-serif;
     font-size: 14px;
     text-shadow: 0 0 5px black;
-  }
+    position: relative;
+    cursor: pointer;
+    pointer-events: auto;
+}

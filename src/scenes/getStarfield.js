@@ -42,7 +42,7 @@ export default function getStarfield({ numStars = 800 } = {}) {
   const mat = new THREE.PointsMaterial({
     size: 1200,
     vertexColors: true,
-    map: new THREE.TextureLoader().load("../../assets/textures/stars/circle.png"),
+    map: new THREE.TextureLoader().load("./assets/textures/stars/circle.png"),
   });
 
   const points = new THREE.Points(geo, mat);
