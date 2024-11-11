@@ -1,0 +1,48 @@
+function loadLibrary() {
+  disposeCurrentScene(() => {
+    const content = document.getElementById("content");
+    content.innerHTML = `
+      <div class="content-wrapper">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12"  style="height: 80vh; position: relative;">
+              <div class="overlay-text">
+            <h1 id="library_content_title">Biblioteka Astralna</h1>
+            <ul id="library-list">
+              <li><a href="#" class="planet-container" id="sun-link">Słońce</a></li>
+              <li><a href="#" class="planet-container" id="mercury-link">Merkury</a></li>
+              <li><a href="#" class="planet-container" id="venus-link">Wenus</a></li>
+              <li><a href="#" class="planet-container" id="earth-link">Ziemia</a></li>
+              <li><a href="#" class="planet-container" id="mars-link">Mars</a></li>
+              <li><a href="#" class="planet-container" id="jupiter-link">Jowisz</a></li>
+              <li><a href="#" class="planet-container" id="saturn-link">Saturn</a></li>
+              <li><a href="#" class="planet-container" id="uranus-link">Uran</a></li>
+              <li><a href="#" class="planet-container" id="neptun-link">Neptun</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  `;
+  const contentWrapper = content.querySelector('.content-wrapper');
+    contentWrapper.classList.add('fade-in');
+    
+    requestAnimationFrame(() => {
+      contentWrapper.classList.add('show');
+    });
+    
+    showStarfield();
+    setActiveLink("library-link");
+
+  //document.getElementById("sun-link").addEventListener("click", loadSun);
+  document.getElementById("mercury-link").addEventListener("click", loadMercury);
+  document.getElementById("venus-link").addEventListener("click", loadVenus);
+  document.getElementById("earth-link").addEventListener("click", loadEarth);
+  document.getElementById("mars-link").addEventListener("click", loadMars);
+  document.getElementById("jupiter-link").addEventListener("click", loadJupiter);
+  // document.getElementById("saturn-link").addEventListener("click", loadSaturn);
+  //document.getElementById("uranus-link").addEventListener("click", loadUranus);
+  // document.getElementById("neptun-link").addEventListener("click", loadUranus);
+});
+}

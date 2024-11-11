@@ -55,16 +55,16 @@ const sunDistance = 357790;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 3;
 const rotationAngle = 260;
-const marsTexturePath = "../../assets/textures/mars/8k_mars.jpg";
-const displacementMapPath = "../../assets/textures/mars/8k_mars_DISP.png";
-const marsBumpMapPath = "../../assets/textures/mars/8k_mars_NRM.jpg";
+const marsTexturePath = "./assets/textures/mars/8k_mars.jpg";
+const displacementMapPath = "./assets/textures/mars/8k_mars_DISP.png";
+const marsBumpMapPath = "./assets/textures/mars/8k_mars_NRM.jpg";
 
 // Dane księżyców
 const moonsData = [
     {
         name: 'Phobos',
         radius: 0.0176,
-        modelPath: '../../assets/textures/3D_models/Fobos.glb',
+        modelPath: './assets/textures/3D_models/Fobos.glb',
         scale: 0.0352,
         orbitDuration: 9.5,
         rotationDuration: 9.5,
@@ -76,7 +76,7 @@ const moonsData = [
     {
         name: 'Deimos',
         radius: 0.0097,
-        modelPath: '../../assets/textures/3D_models/Deimos.glb',
+        modelPath: './assets/textures/3D_models/Deimos.glb',
         scale: 0.0194,
         orbitDuration: 37.9,
         rotationDuration: 37.9,
@@ -151,7 +151,7 @@ export function initializeMarsScene(containerElement) {
     ambientLight = sunResult.ambientLight;
 
     // Gwiazdy
-    const stars = getStarfield({ numStars: 500 });
+    const stars = getStarfield({ numStars: 1000 });
     scene.add(stars);
 
     controls.minDistance = planetRadius + planetRadius * 0.2;

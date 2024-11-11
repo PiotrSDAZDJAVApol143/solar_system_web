@@ -30,9 +30,9 @@ const sunDistance = 169810;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 4;
 const rotationAngle =110;
-const venusTexturePath = "../../assets/textures/venus/8k_venus_surface.jpg";
-const venusBumpMapPath = "../../assets/textures/venus/8k_venus_surface_NRM.png";
-const venusCloudTexturePath = "../../assets/textures/venus/4k_venus_atmosphere.jpg";
+const venusTexturePath = "./assets/textures/venus/8k_venus_surface.jpg";
+const venusBumpMapPath = "./assets/textures/venus/8k_venus_surface_NRM.png";
+const venusCloudTexturePath = "./assets/textures/venus/4k_venus_atmosphere.jpg";
 
 let raycaster = new THREE.Raycaster();
 
@@ -82,7 +82,7 @@ export function initializeVenusScene(containerElement) {
     ambientLight = sunResult.ambientLight;
 
     // Gwiazdy
-    const stars = getStarfield({ numStars: 500 });
+    const stars = getStarfield({ numStars: 1000 });
     scene.add(stars);
 
     window.addEventListener('resize', handleWindowResize, false);

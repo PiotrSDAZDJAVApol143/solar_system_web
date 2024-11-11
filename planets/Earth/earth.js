@@ -55,29 +55,34 @@ const sunDistance = 234800;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 3.5;
 const rotationAngle = 60;
-const earthTexturePath = "../../assets/textures/earth/8k_earth_daymap.jpg";
-const earthNightTexturePath = "../../assets/textures/earth/8k_earth_nightmap.jpg";
-const earthBumpMapPath = "../../assets/textures/earth/earthbump10k.jpg";
-const earthCloudTexturePath = "../../assets/textures/earth/clouds_8k.jpg";
+const earthTexturePath = "./assets/textures/earth/8k_earth_daymap.jpg";
+const earthNightTexturePath = "./assets/textures/earth/8k_earth_nightmap.jpg";
+const earthBumpMapPath = "./assets/textures/earth/earthbump10k.jpg";
+const earthCloudTexturePath = "./assets/textures/earth/clouds_8k.jpg";
 
 // Dane księżyców
 const moonsData = [
     {
         name: 'Moon',
         radius: 2.73,
-        texturePath: "../../assets/textures/earth/Moon/8k_moon.jpg",
+        texturePath: "./assets/textures/earth/Moon/8k_moon.jpg",
         orbitDuration: 819.6,
         rotationDuration: 819.6,
         distance: 603,
         orbitTilt: 5.145,
         rotationTilt: 1.54,
         isGLTF: false, // Jeśli księżyc jest w formacie GLTF, ustaw na true
+        isPLY: false,
     },
 ];
 
 let guiParams = {
     showObjectNames: false,
-    showOrbitTails: false, // Przełącznik dla ogonów orbity
+    showSmallMoons: false,
+    showMediumMoons: false,
+    showLargeMoons: false,
+    showOrbitTails: false,
+
 };
 
 let raycaster = new THREE.Raycaster();
@@ -151,7 +156,7 @@ export function initializeEarthScene(containerElement) {
     sunPivot = sunResult.sunPivot;
     ambientLight = sunResult.ambientLight;
 
-    const stars = getStarfield({ numStars: 500 });
+    const stars = getStarfield({ numStars: 1000 });
     scene.add(stars);
 
     controls.minDistance = planetRadius + planetRadius * 0.2;
@@ -286,7 +291,20 @@ function animate() {
 
 function toggleObjectNames(show) {
     for (const moon of moons) {
-        if (moon.label) moon.label.visible = show;
+        if (moon.label) {
+            const radius = moon.radius;
+
+            let shouldShow = false;
+            if (radius <= 0.008 && guiParams.showSmallMoons) {
+                shouldShow = true;
+            } else if (radius > 0.008 && radius < 0.25 && guiParams.showMediumMoons) {
+                shouldShow = true;
+            } else if (radius >= 0.25 && guiParams.showLargeMoons) {
+                shouldShow = true;
+            }
+
+            moon.label.userData.shouldShow = guiParams.showObjectNames && shouldShow;
+        }
     }
 }
 

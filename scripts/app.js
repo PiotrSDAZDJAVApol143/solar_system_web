@@ -6,8 +6,9 @@ import { initializeMercuryScene, disposeMercuryScene } from '../planets/Mercury/
 import { initializeVenusScene, disposeVenusScene } from '../planets/Venus/venus.js';
 import { initializeEarthScene, disposeEarthScene } from '../planets/Earth/earth.js';
 import { initializeJupiterScene, disposeJupiterScene } from '../planets/Jupiter/jupiter.js';
+import { initializeStarfieldMainScene, pauseStarfield, resumeStarfield  } from '../src/scenes/starfieldMainScene.js';
 
-
+let starfieldInitialized = false;
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -23,30 +24,101 @@ document.addEventListener("DOMContentLoaded", () => {
   loadHome(); /*domyślnie strona główna */
 });
 
-function disposeCurrentScene() {
-  disposeMarsScene();
-  disposeMercuryScene();
-  disposeVenusScene();
-  disposeEarthScene();
+function disposeCurrentScene(callback) {
+  const content = document.getElementById("content");
+  const contentWrapper = content.querySelector('.content-wrapper');
 
+  if (contentWrapper) {
+    contentWrapper.classList.add('fade-out', 'fade');
+
+    setTimeout(() => {
+      // Nie usuwamy starfield
+      disposeMarsScene();
+      disposeMercuryScene();
+      disposeVenusScene();
+      disposeEarthScene();
+      disposeJupiterScene();
+
+      content.innerHTML = "";
+      if (callback) {
+        callback();
+      }
+    }, 1500);
+  } else {
+    if (callback) {
+      callback();
+    }
+  }
 }
+
 
 function loadHome() {
-  const content = document.getElementById("content");
-  content.innerHTML = `
-    <h1>Witamy na Stronie Głównej Astro-Friq</h1>
-    <p>Znajdziesz tu różne informacje o kosmosie...</p>
-  `;
+  disposeCurrentScene(() => {
+    const content = document.getElementById("content");
+    content.innerHTML = `
+      <div class="content-wrapper">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12"  style="height: 80vh; position: relative;">
+              <div class="overlay-text">
+                <h1>UKŁAD SŁONECZNY I JEGO TAJEMNICE</h1>
+                <p>Na tej stronie dowiesz się o faktach i śmiesznych ciekawostkach związanych z naszym Układem Słonecznym.</p>
+                <p>Model Układu Słonecznego wygenerowany został w skali, aby odwzorować realizm.</p>
+                <p>Wciąż pracuję nad udoskonaleniem strony, aby dawała przyjemność z nabywania wiedzy :)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
 
-  setActiveLink("home-link");
+    const contentWrapper = content.querySelector('.content-wrapper');
+    contentWrapper.classList.add('fade-in');
+
+    requestAnimationFrame(() => {
+      contentWrapper.classList.add('show');
+    });
+
+    showStarfield();
+
+    setActiveLink("home-link");
+  });
 }
 
+
 function loadAboutMe() {
-  const content = document.getElementById("content");
-  content.innerHTML = `
-    <h1> To sem ja :) </h1>
+  disposeCurrentScene(() => {
+    const content = document.getElementById("content");
+    content.innerHTML = `
+      <div class="content-wrapper">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12"  style="height: 80vh; position: relative;">
+              <div class="overlay-text">
+                <h1>O MNIE</h1>
+          <p>
+Cześć! Mam na imię Piotr i jestem początkującym programistą, który stawia pierwsze kroki w świecie kodowania. W 2024 roku ukończyłem kurs "Backend Java od podstaw" w Software Development Academy, co pozwoliło mi zyskać solidne fundamenty w programowaniu. Moja przygoda z programowaniem rozpoczęła się jednak wcześniej, w 2023 roku, kiedy zacząłem uczyć się samodzielnie 
+z różnych źródeł, takich jak kursy na YouTube i Udemy oraz książki.
+
+Od kilku miesięcy zgłębiam JavaScript, Three.js oraz podstawy modelowania w Blenderze, co pozwala mi rozwijać się w kierunku tworzenia interaktywnych wizualizacji i animacji 3D. Zawodowo jestem magistrem Ekonomii i pracuję jako spedytor od 13 lat, ale programowanie stało się moją prawdziwą pasją, którą realizuję z entuzjazmem i zaangażowaniem.</p>
+          
+          </div>
+        </div>
+      </div>
+    </div>
   `;
+  
+  const contentWrapper = content.querySelector('.content-wrapper');
+  contentWrapper.classList.add('fade-in');
+
+  requestAnimationFrame(() => {
+    contentWrapper.classList.add('show');
+  });
+
+  showStarfield();
+
   setActiveLink("about-link");
+});
 }
 
 function clearThree(obj) {
@@ -74,23 +146,41 @@ function loadSolarSystem() {
 }
 
 function loadLibrary() {
-  const content = document.getElementById("content");
-  content.innerHTML = `
-    <h1 id="library_content_title">Biblioteka Astralna</h1>
-    <ul id="library-list">
-      <li><a href="#" class="planet-container" id="sun-link">Słońce</a></li>
-      <li><a href="#" class="planet-container" id="mercury-link">Merkury</a></li>
-      <li><a href="#" class="planet-container" id="venus-link">Wenus</a></li>
-      <li><a href="#" class="planet-container" id="earth-link">Ziemia</a></li>
-      <li><a href="#" class="planet-container" id="mars-link">Mars</a></li>
-      <li><a href="#" class="planet-container" id="jupiter-link">Jowisz</a></li>
-      <li><a href="#" class="planet-container" id="saturn-link">Saturn</a></li>
-      <li><a href="#" class="planet-container" id="uranus-link">Uran</a></li>
-      <li><a href="#" class="planet-container" id="neptun-link">Neptun</a></li>
-     
-    </ul>
+  disposeCurrentScene(() => {
+    const content = document.getElementById("content");
+    content.innerHTML = `
+      <div class="content-wrapper">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12"  style="height: 80vh; position: relative;">
+              <div class="overlay-text">
+            <h1 id="library_content_title">Biblioteka Astralna</h1>
+            <div class="grid-container">
+              <a href="#" class="planet-button" id="sun-link">Słońce</a>
+              <a href="#" class="planet-button" id="mercury-link">Merkury</a>
+              <a href="#" class="planet-button" id="venus-link">Wenus</a>
+              <a href="#" class="planet-button" id="earth-link">Ziemia</a>
+              <a href="#" class="planet-button" id="mars-link">Mars</a>
+              <a href="#" class="planet-button" id="jupiter-link">Jowisz</a>
+              <a href="#" class="planet-button" id="saturn-link">Saturn</a>
+              <a href="#" class="planet-button" id="uranus-link">Uran</a>
+              <a href="#" class="planet-button" id="neptun-link">Neptun</a>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
   `;
-  setActiveLink("library-link");
+  const contentWrapper = content.querySelector('.content-wrapper');
+    contentWrapper.classList.add('fade-in');
+    
+    requestAnimationFrame(() => {
+      contentWrapper.classList.add('show');
+    });
+    
+    showStarfield();
+    setActiveLink("library-link");
 
   //document.getElementById("sun-link").addEventListener("click", loadSun);
   document.getElementById("mercury-link").addEventListener("click", loadMercury);
@@ -101,27 +191,59 @@ function loadLibrary() {
   // document.getElementById("saturn-link").addEventListener("click", loadSaturn);
   //document.getElementById("uranus-link").addEventListener("click", loadUranus);
   // document.getElementById("neptun-link").addEventListener("click", loadUranus);
-
+});
 }
 
 function loadFunAndFacts() {
   const content = document.getElementById("content");
   content.innerHTML = `
+   <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12"  style="height: 80vh; position: relative;">
+          <div class="overlay-text">
     <h1> Tu będą informacje naukowe i śmieszne ciekawostki </h1>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
+  showStarfield();
   setActiveLink("fun-facts-link");
 }
 
 function loadContact() {
-  const content = document.getElementById("content");
-  content.innerHTML = `
+  disposeCurrentScene(() => {
+    const content = document.getElementById("content");
+    content.innerHTML = `
+      <div class="content-wrapper">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12"  style="height: 80vh; position: relative;">
+              <div class="overlay-text">
     <h1> Tu się wklei jakiś kontakt </h1>
+     </div>
+        </div>
+      </div>
+    </div>
+    </div>
   `;
+  
+  const contentWrapper = content.querySelector('.content-wrapper');
+  contentWrapper.classList.add('fade-in');
+
+  requestAnimationFrame(() => {
+    contentWrapper.classList.add('show');
+  });
+
+  showStarfield();
+
   setActiveLink("contact-link");
+});
 }
 
 
 function loadMars() {
+  hideStarfield();
   // Usuń poprzednią scenę, jeśli istnieje
   disposeMarsScene();
 
@@ -136,6 +258,7 @@ function loadMars() {
        <div class="col-md-3" id="planet-info">
       <h2>Informacje o Marsie</h2>
       <p>Mars jest czwartą planetą od Słońca...</p>
+      <p> Dane będą zaciągane z backendu z bazy danych</p>
     </div>
       </div>
     </div>
@@ -148,6 +271,7 @@ function loadMars() {
 }
 
 function loadMercury() {
+  hideStarfield();
   disposeMercuryScene();
 
   const content = document.getElementById("content");
@@ -161,6 +285,7 @@ function loadMercury() {
        <div class="col-md-3" id="planet-info">
       <h2>Informacje o Mercury</h2>
       <p>Mercury jest 1 planetą od Słońca...</p>
+      <p> Dane będą zaciągane z backendu z bazy danych</p>
     </div>
       </div>
     </div>
@@ -172,6 +297,7 @@ function loadMercury() {
   initializeMercuryScene(container);
 }
 function loadVenus() {
+  hideStarfield();
   disposeVenusScene();
 
   const content = document.getElementById("content");
@@ -197,6 +323,7 @@ function loadVenus() {
 }
 
 function loadEarth() {
+  hideStarfield();
   disposeEarthScene();
   const content = document.getElementById("content");
 
@@ -220,6 +347,7 @@ function loadEarth() {
 }
 
 function loadJupiter() {
+  hideStarfield();
   disposeJupiterScene();
   const content = document.getElementById("content");
   content.innerHTML = `
@@ -250,4 +378,21 @@ function setActiveLink(activeId) {
   });
   const activeLink = document.getElementById(activeId);
   activeLink.classList.add("active");
+}
+function showStarfield() {
+  const starfieldContainer = document.getElementById('starfield-container');
+  starfieldContainer.style.display = 'block';
+
+  if (!starfieldInitialized) {
+    initializeStarfieldMainScene(starfieldContainer);
+    starfieldInitialized = true;
+  } else {
+    resumeStarfield();
+  }
+}
+
+function hideStarfield() {
+  const starfieldContainer = document.getElementById('starfield-container');
+  starfieldContainer.style.display = 'none';
+  pauseStarfield();
 }

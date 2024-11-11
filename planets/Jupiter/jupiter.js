@@ -240,7 +240,7 @@ export function initializeJupiterScene(containerElement) {
     sunPivot = sunResult.sunPivot;
     ambientLight = sunResult.ambientLight;
 
-    const stars = getStarfield({ numStars: 500 });
+    const stars = getStarfield({ numStars: 1000 });
     scene.add(stars);
 
     controls.minDistance = planetRadius + planetRadius * 0.2;
@@ -259,7 +259,7 @@ export function initializeJupiterScene(containerElement) {
         moonData.state = state;
         moonData.guiParams = guiParams;
         moonData.occlusionObjects = occlusionObjects;
-        moonData.orbitTails = orbitTails;
+        moonData.orbitTails = orbitTails;  // sprawdz wersje
         moonData.labelRenderer = labelRenderer;
         moonData.raycaster = raycaster;
         moonData.updatePlanetInfo = updatePlanetInfo;

@@ -20,7 +20,7 @@ let occlusionObjects = [];
 const planetRadius = 3.83;
 const axialTilt = -0.034;
 const cameraPosition = planetRadius * 2;
-const flarePower = 900;
+const flarePower = 1000;
 const mercuryDay = 1765;
 const sunOrbitDuration = 2638;
 const sunRadius = 1093;
@@ -28,8 +28,8 @@ const sunDistance = 90890;
 const spaceHorizonDistance = 500000;
 const ambientLightPower = 5;
 const rotationAngle = -180;
-const mercuryTexturePath = "../../assets/textures/mercury/16k_mercury_texture.jpg";
-const mercuryBumpMapPath = "../../assets/textures/mercury/mercury_bump3.jpg";
+const mercuryTexturePath = "./assets/textures/mercury/16k_mercury_texture.jpg";
+const mercuryBumpMapPath = "./assets/textures/mercury/mercury_bump3.jpg";
 
 let raycaster = new THREE.Raycaster();
 
@@ -68,7 +68,7 @@ export function initializeMercuryScene(containerElement) {
     ambientLight = sunResult.ambientLight;
 
     // Gwiazdy
-    const stars = getStarfield({ numStars: 500 });
+    const stars = getStarfield({ numStars: 1000 });
     scene.add(stars);
 
     window.addEventListener('resize', handleWindowResize, false);
