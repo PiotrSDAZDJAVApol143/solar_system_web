@@ -73,11 +73,10 @@ function loadHome() {
     `;
 
     const contentWrapper = content.querySelector('.content-wrapper');
-    contentWrapper.classList.add('fade-in');
 
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       contentWrapper.classList.add('show');
-    });
+    }, 50);
 
     showStarfield();
 
@@ -109,11 +108,10 @@ Od kilku miesięcy zgłębiam JavaScript, Three.js oraz podstawy modelowania w B
   `;
   
   const contentWrapper = content.querySelector('.content-wrapper');
-  contentWrapper.classList.add('fade-in');
 
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     contentWrapper.classList.add('show');
-  });
+  }, 50);
 
   showStarfield();
 
@@ -172,11 +170,10 @@ function loadLibrary() {
     </div>
   `;
   const contentWrapper = content.querySelector('.content-wrapper');
-    contentWrapper.classList.add('fade-in');
     
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       contentWrapper.classList.add('show');
-    });
+    }, 50);
     
     showStarfield();
     setActiveLink("library-link");
@@ -228,11 +225,10 @@ function loadContact() {
   `;
   
   const contentWrapper = content.querySelector('.content-wrapper');
-  contentWrapper.classList.add('fade-in');
 
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     contentWrapper.classList.add('show');
-  });
+  }, 50);
 
   showStarfield();
 

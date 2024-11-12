@@ -111,12 +111,12 @@ a:hover {
     color: rgba(214, 199, 199, 0.66);
 }
 
-.content-wrapper.fade-in {
+.content-wrapper {
     opacity: 0;
     transition: opacity 1.5s ease-in;
 }
 
-.content-wrapper.fade-in.show {
+.content-wrapper.show {
     opacity: 1;
 }
 
